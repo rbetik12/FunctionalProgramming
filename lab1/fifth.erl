@@ -6,11 +6,23 @@
 
 %% 2432902008176640000 is 2*3*4*5*6*7*8*9*10*11*12*13*14*15*16*17*18*19*20
 
+%% common code
+
 print_answer(Ans) ->
   if
     Ans == 0 -> io:format("Answer wasn't found in range [100, 2432902008176640000] ~n");
     true -> io:format("Answer was found in range [100, 2432902008176640000]. The answer is: ~B~n", [Ans])
   end.
+
+is_divided_without_rem_on_seq(Number, Start, Finish) ->
+  lists:all(
+    fun(Divider) ->
+      if
+        not (Number rem Divider == 0) -> false;
+        true -> true
+      end
+    end,
+    lists:seq(Start, Finish)).
 
 %% Naive recursion implementation %%
 
@@ -45,15 +57,7 @@ fold(Start) ->
   end.
 
 fold_division_1_to_20_checker(SeqItem) ->
-  IsAnswer = lists:all(
-    fun(Divider) ->
-      if
-        not (SeqItem rem Divider == 0) -> false;
-        true -> true
-      end
-    end,
-    lists:seq(2, 20)),
-
+  IsAnswer = is_divided_without_rem_on_seq(SeqItem, 2, 20),
   if
     IsAnswer == true -> print_answer(SeqItem), false;
     true -> true
