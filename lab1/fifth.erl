@@ -2,7 +2,7 @@
 -author("vitaliy").
 
 %% API
--export([recursion_start/1, filter_start/1]).
+-export([recursion_start/1, filter_start/1, map_start/1]).
 
 %% 2432902008176640000 is 2*3*4*5*6*7*8*9*10*11*12*13*14*15*16*17*18*19*20
 
@@ -55,8 +55,36 @@ division_1_to_20_checker(Number, Divider) ->
 filter_start(Start) ->
   print_answer(lists:nth(
     1,
-    lists:filter(fun is_divided_on_1_20/1, lists:seq(Start, 300000000))
+    lists:filter(
+      fun is_divided_on_1_20/1,
+      lists:filter(fun(Element) -> Element rem 2 == 0 end, lists:seq(Start, 300000000))
+    )
   )).
+
+%% Map implementation
+
+map_start(Start) ->
+  print_answer(
+    erlang:element(
+      2,
+      lists:search(
+        fun(Item) ->
+          if
+            not(Item == 0) -> true;
+            true -> false
+          end
+        end,
+        lists:map(
+          fun(Item) ->
+            IsAns = is_divided_on_1_20(Item),
+            if
+              IsAns == true -> Item;
+              true -> 0
+            end
+          end,
+          lists:seq(Start, 300000000)
+        )
+      ))).
 
 
 
