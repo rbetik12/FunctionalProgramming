@@ -2,7 +2,7 @@
 -author("vitaliy").
 
 %% API
--export([recursion/1, fold/0, fold_division_1_to_20_checker/1]).
+-export([recursion/1, fold/1, fold_division_1_to_20_checker/1]).
 
 %% 2432902008176640000 is 2*3*4*5*6*7*8*9*10*11*12*13*14*15*16*17*18*19*20
 
@@ -37,31 +37,26 @@ division_1_to_20_checker(Number, Divider) ->
 
 %% Fold implementation %%
 
-fold() ->
-  Ans = lists:all(fun fold_division_1_to_20_checker/1, lists:seq(232792559, 232792561)),
+fold(Start) ->
+  Ans = lists:all(fun fold_division_1_to_20_checker/1, lists:seq(Start, 232792561)),
   if
     Ans == false -> ok;
     true -> false
   end.
 
 fold_division_1_to_20_checker(SeqItem) ->
-  DivisionResult = lists:foldl(
-    fun(Divider, Res) ->
+  IsAnswer = lists:all(
+    fun(Divider) ->
       if
-        not (SeqItem rem Divider == 0) -> 0;
-        true ->
-          if
-            Res == 0 -> 0;
-            true -> SeqItem
-          end
+        not (SeqItem rem Divider == 0) -> false;
+        true -> true
       end
     end,
-    SeqItem,
     lists:seq(2, 20)),
 
   if
-    DivisionResult == 0 -> true;
-    true -> print_answer(SeqItem), false
+    IsAnswer == true -> print_answer(SeqItem), false;
+    true -> true
   end.
 
 
