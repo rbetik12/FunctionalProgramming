@@ -2,7 +2,7 @@
 -author("vitaliy").
 
 %% API
--export([recursion/1, fold/1, fold_division_1_to_20_checker/1]).
+-export([recursion_start/1, filter_start/1]).
 
 %% 2432902008176640000 is 2*3*4*5*6*7*8*9*10*11*12*13*14*15*16*17*18*19*20
 
@@ -13,6 +13,9 @@ print_answer(Ans) ->
     Ans == 0 -> io:format("Answer wasn't found in range [100, 2432902008176640000] ~n");
     true -> io:format("Answer was found in range [100, 2432902008176640000]. The answer is: ~B~n", [Ans])
   end.
+
+is_divided_on_1_20(Number) ->
+  is_divided_without_rem_on_seq(Number, 2, 20).
 
 is_divided_without_rem_on_seq(Number, Start, Finish) ->
   lists:all(
@@ -26,14 +29,14 @@ is_divided_without_rem_on_seq(Number, Start, Finish) ->
 
 %% Naive recursion implementation %%
 
-recursion(2432902008176640000) ->
+recursion_start(2432902008176640000) ->
   print_answer(0);
 
-recursion(Number) ->
+recursion_start(Number) ->
   Result = division_1_to_20_checker(Number, 2),
   if
     Result == 0 ->
-      recursion(Number + 1);
+      recursion_start(Number + 1);
     true ->
       print_answer(Result)
   end.
@@ -47,21 +50,14 @@ division_1_to_20_checker(Number, Divider) ->
     true -> 0
   end.
 
-%% Fold implementation %%
+%% Filter implementation %%
 
-fold(Start) ->
-  Ans = lists:all(fun fold_division_1_to_20_checker/1, lists:seq(Start, 232792561)),
-  if
-    Ans == false -> ok;
-    true -> false
-  end.
+filter_start(Start) ->
+  print_answer(lists:nth(
+    1,
+    lists:filter(fun is_divided_on_1_20/1, lists:seq(Start, 300000000))
+  )).
 
-fold_division_1_to_20_checker(SeqItem) ->
-  IsAnswer = is_divided_without_rem_on_seq(SeqItem, 2, 20),
-  if
-    IsAnswer == true -> print_answer(SeqItem), false;
-    true -> true
-  end.
 
 
 
