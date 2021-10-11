@@ -1,35 +1,33 @@
 #include <iostream>
-
-int symma(int n)
-{
-    int sum = 0;
-    while (n != 0)
-    {
-        sum = sum + (n % 10);
-        n = n / 10;
-    }
-    return sum;
-}
+#include <unordered_map>
 
 int main()
 {
-    int maxIndex = -1;
-    int x;
+    int nMax = 0;
+    std::unordered_map<int, int> firstPos;
+
     for (int i = 1; i < 1000; i++)
     {
-        x = i;
-        std::cout << x << std::endl;
-        int k = 0;
-        while (x != 0)
+        int n = i;
+        int position = 0;
+        std::string period = "";
+        int rem = 1;
+        firstPos.clear();
+
+        while (firstPos.find(rem) == firstPos.end())
         {
-            x = x - symma(x);
-            k++;
+            firstPos[rem] = position;
+            period += std::to_string(rem / n);
+            rem = (rem % n) * 10;
+            position += 1;
         }
 
-        if (k > maxIndex)
+        if (period.size() > nMax)
         {
-            maxIndex = i;
+            nMax = period.size();
+
         }
     }
-    std::cout << maxIndex << std::endl;
+
+    std::cout << nMax << std::endl;
 }
