@@ -4,6 +4,7 @@
 int main()
 {
     int nMax = 0;
+    int index = 0;
     std::unordered_map<int, int> firstPos;
 
     for (int i = 1; i < 1000; i++)
@@ -25,9 +26,10 @@ int main()
         if (period.size() > nMax)
         {
             nMax = period.size();
-
+            index = i;
         }
     }
 
     std::cout << nMax << std::endl;
+    std::cout << index << std::endl;
 }
