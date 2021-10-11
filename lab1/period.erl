@@ -2,7 +2,7 @@
 -author("vitaliy").
 
 %% API
--export([start_tail_recursion/0, start_recursion/0]).
+-export([start_tail_recursion/0, start_recursion/0, start_fold/0]).
 
 %% Tail recursion implementation %%
 
@@ -47,3 +47,21 @@ recursion(Number, Max) ->
     PeriodLen > NewMax -> PeriodLen;
     true -> NewMax
   end.
+
+%% Fold implementation %%
+
+start_fold() ->
+  fold().
+
+fold() ->
+  lists:foldl(
+    fun(Number, Max) ->
+      PeriodLen = string:length(period_generator(Number, 0, "", 1, maps:new())),
+      if
+        PeriodLen > Max -> PeriodLen;
+        true -> Max
+      end
+    end,
+    0,
+    lists:seq(1, 1000)
+  ).
