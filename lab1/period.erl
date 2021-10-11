@@ -2,7 +2,7 @@
 -author("vitaliy").
 
 %% API
--export([start_tail_recursion/0, start_recursion/0, start_fold/0]).
+-export([start_tail_recursion/0, start_recursion/0, start_fold/0, start_map/0]).
 
 %% Tail recursion implementation %%
 
@@ -64,4 +64,19 @@ fold() ->
     end,
     0,
     lists:seq(1, 1000)
+  ).
+
+%% Map implementation %%
+
+start_map() ->
+  map().
+
+map() ->
+  lists:max(
+    lists:map(
+      fun(Number) ->
+        string:length(period_generator(Number, 0, "", 1, maps:new()))
+      end,
+      lists:seq(1, 1000)
+    )
   ).
