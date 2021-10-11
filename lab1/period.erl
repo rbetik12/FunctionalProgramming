@@ -2,7 +2,7 @@
 -author("vitaliy").
 
 %% API
--export([start_tail_recursion/0]).
+-export([start_tail_recursion/0, start_recursion/0]).
 
 %% Tail recursion implementation %%
 
@@ -34,3 +34,16 @@ period_generator(N, Position, Period, Rem, FirstPos) ->
 
 %% Recursion implementation %%
 
+start_recursion() ->
+  recursion(1, 0).
+
+recursion(1001, Max) ->
+  Max;
+
+recursion(Number, Max) ->
+  NewMax = recursion(Number + 1, Max),
+  PeriodLen = string:length(period_generator(Number, 0, "", 1, maps:new())),
+  if
+    PeriodLen > NewMax -> PeriodLen;
+    true -> NewMax
+  end.
