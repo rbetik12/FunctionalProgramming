@@ -3,13 +3,13 @@
 
 %% API
 -export([
-  tail_recursion_start/1,
-  recursion_start/0
-%%  filter_start/1,
+  tail_recursion_start/0,
+  recursion_start/0,
+  filter_start/0
 %%  map_start/1,
 ]).
 
-%% common code
+%% Common code %%
 
 print_answer(0) -> io:format("Answer wasn't found in range [100, 300000000] ~n");
 print_answer(Ans) -> io:format("Answer was found in range [100, 300000000]. The answer is: ~B~n", [Ans]).
@@ -22,7 +22,7 @@ is_divided_without_rem_on_seq(Number, Start, Finish) ->
 
 %% Tail recursion implementation %%
 
-tail_recursion_start(Number) -> tail_recursion(Number, false).
+tail_recursion_start() -> tail_recursion(1, false).
 
 tail_recursion(300000000, Result) -> print_answer(0);
 
@@ -49,15 +49,14 @@ recursion(Number) ->
 
 %% Filter implementation %%
 
-%%filter_start(Start) ->
-%%  print_answer(lists:nth(
-%%    1,
-%%    lists:filter(
-%%      fun is_divided_on_1_20/1,
-%%      lists:filter(fun(Element) -> Element rem 2 == 0 end, lists:seq(Start, 300000000))
-%%    )
-%%  )).
-%%
+filter_start() ->
+  print_answer(
+    lists:nth(
+      1,
+      [Y ||
+        Y <- [X || X <- lists:seq(1, 300000000), X rem 2 == 0],
+        is_divided_without_rem_on_seq(Y, 3, 20) == true])).
+
 %%%% Map implementation %%
 %%
 %%map_start(Start) ->
