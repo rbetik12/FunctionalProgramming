@@ -3,10 +3,10 @@
 
 %% API
 -export([
-  tail_recursion_start/1
+  tail_recursion_start/1,
+  recursion_start/0
 %%  filter_start/1,
 %%  map_start/1,
-%%  recursion/1
 ]).
 
 %% common code
@@ -20,35 +20,35 @@ is_divided_result(Len) -> false.
 is_divided_without_rem_on_seq(Number, Start, Finish) ->
   is_divided_result(length([X || X <- lists:seq(Start, Finish), Number rem X =/= 0])).
 
-
 %% Tail recursion implementation %%
 
 tail_recursion_start(Number) -> tail_recursion(Number, false).
 
-tail_recursion(300000000, Result) ->
-  print_answer(0);
+tail_recursion(300000000, Result) -> print_answer(0);
 
-tail_recursion(Number, true) ->
-  print_answer(Number - 1);
+tail_recursion(Number, true) -> print_answer(Number - 1);
 
-tail_recursion(Number, false) ->
-  tail_recursion(Number + 1, is_divided_without_rem_on_seq(Number, 2, 20)).
+tail_recursion(Number, false) -> tail_recursion(Number + 1, is_divided_without_rem_on_seq(Number, 2, 20)).
 
 %% Recursion implementation %%
 
-%%recursion(300000000) ->
-%%  0;
-%%
-%%recursion(Number) ->
-%%  recursion(Number + 1),
-%%  Result = division_1_to_20_checker(Number, 2),
-%%  if
-%%    Result == 0 -> ok;
-%%    true -> print_answer(Result)
-%%  end.
-%%
-%%%% Filter implementation %%
-%%
+recursion_start() -> print_answer(recursion(1)).
+
+recursion(300000000) -> 0;
+
+recursion(Number) ->
+  Result = recursion(Number + 1),
+  if
+    Result == 0 ->
+      case is_divided_without_rem_on_seq(Number, 2, 20) of
+        true -> Number;
+        false -> Result
+      end;
+    true -> Result
+  end.
+
+%% Filter implementation %%
+
 %%filter_start(Start) ->
 %%  print_answer(lists:nth(
 %%    1,
