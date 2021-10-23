@@ -5,8 +5,8 @@
 -export([
   tail_recursion_start/0,
   recursion_start/0,
-  filter_start/0
-%%  map_start/1,
+  filter_start/0,
+  map_start/0
 ]).
 
 %% Common code %%
@@ -57,30 +57,27 @@ filter_start() ->
         Y <- [X || X <- lists:seq(1, 300000000), X rem 2 == 0],
         is_divided_without_rem_on_seq(Y, 3, 20) == true])).
 
-%%%% Map implementation %%
-%%
-%%map_start(Start) ->
-%%  print_answer(
-%%    erlang:element(
-%%      2,
-%%      lists:search(
-%%        fun(Item) ->
-%%          if
-%%            not(Item == 0) -> true;
-%%            true -> false
-%%          end
-%%        end,
-%%        lists:map(
-%%          fun(Item) ->
-%%            IsAns = is_divided_on_1_20(Item),
-%%            if
-%%              IsAns == true -> Item;
-%%              true -> 0
-%%            end
-%%          end,
-%%          lists:seq(Start, 300000000)
-%%        )
-%%      ))).
+%% Map implementation %%
+
+map_start() ->
+  print_answer(map(2)).
+
+map(Start) ->
+  lists:nth(
+    1,
+    [X ||
+      X <- lists:map(
+        fun(Item) ->
+          case is_divided_without_rem_on_seq(Item, 2, 20) of
+            true -> Item;
+            false -> 0
+          end
+        end,
+        lists:seq(Start, 300000000)
+      ),
+      X =/= 0
+    ]
+  ).
 
 
 
