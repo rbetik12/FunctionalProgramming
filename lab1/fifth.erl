@@ -14,15 +14,12 @@
 print_answer(0) -> io:format("Answer wasn't found in range [100, 300000000] ~n");
 print_answer(Ans) -> io:format("Answer was found in range [100, 300000000]. The answer is: ~B~n", [Ans]).
 
+is_divided_result(0) -> true;
+is_divided_result(Len) -> false.
+
 is_divided_without_rem_on_seq(Number, Start, Finish) ->
-  lists:all(
-    fun(Divider) ->
-      if
-        not (Number rem Divider == 0) -> false;
-        true -> true
-      end
-    end,
-    lists:seq(Start, Finish)).
+  is_divided_result(length([X || X <- lists:seq(Start, Finish), Number rem X =/= 0])).
+
 
 %% Tail recursion implementation %%
 
