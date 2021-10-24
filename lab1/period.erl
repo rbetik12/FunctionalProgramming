@@ -72,11 +72,28 @@ map_start() ->
   map().
 
 map() ->
-  lists:max(
-    lists:map(
-      fun(Number) ->
-        string:length(period_generator(Number, 0, "", 1, maps:new()))
-      end,
-      lists:seq(1, 1000)
-    )
-  ).
+  element(2, map(1, get_prime_list(), 0, 0)).
+
+map(1001, List, Max, M) -> {List, Max + 1};
+
+map(Counter, List, Max, M) ->
+  NewM = M * 10 + 9,
+  ListAndMax = lists:mapfoldl(
+    fun (Item, Max) ->
+      case Item =/= 0 of
+        false -> {Item, Max};
+        true ->
+          case NewM rem Item == 0 of
+            false -> {Item, Max};
+            true ->
+              case Counter > Max of
+                true -> {0, Counter};
+                _ -> {0, Max}
+              end
+          end
+      end
+    end,
+    Max,
+    List
+  ),
+  map(Counter + 1, element(1, ListAndMax), element(2, ListAndMax), NewM).
