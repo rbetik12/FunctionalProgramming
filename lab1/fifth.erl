@@ -86,13 +86,16 @@ map(Start) ->
 
 endless_list_start() ->
   ListIter = create_endless_list(fun(X) -> X + 1 end, 1),
-  endless_list_iter(ListIter, 1).
+  print_answer(endless_list_find_solution(ListIter, 1)).
 
-endless_list_iter(Iter, 10) -> ok;
+endless_list_find_solution(Iter, 300000000) -> 0;
 
-endless_list_iter(Iter, Count) ->
-  io:format("~B~n", [endless_list_next(Iter)]),
-  endless_list_iter(Iter, Count + 1).
+endless_list_find_solution(Iter, Count) ->
+  Value = endless_list_next(Iter),
+  case is_divided_without_rem_on_seq(Value, 1, 20) of
+    true -> Value;
+    _ -> endless_list_find_solution(Iter, Count + 1)
+  end.
 
 
 
