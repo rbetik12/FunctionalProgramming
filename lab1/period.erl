@@ -79,18 +79,14 @@ map(1001, List, Max, M) -> {List, Max + 1};
 map(Counter, List, Max, M) ->
   NewM = M * 10 + 9,
   ListAndMax = lists:mapfoldl(
-    fun (Item, Max) ->
+    fun(Item, Max) ->
       case Item =/= 0 of
-        false -> {Item, Max};
-        true ->
-          case NewM rem Item == 0 of
-            false -> {Item, Max};
-            true ->
-              case Counter > Max of
-                true -> {0, Counter};
-                _ -> {0, Max}
-              end
-          end
+        Result when Result == true, NewM rem Item == 0 ->
+          case Counter > Max of
+            true -> {0, Counter};
+            _ -> {0, Max}
+          end;
+        _ -> {Item, Max}
       end
     end,
     Max,
