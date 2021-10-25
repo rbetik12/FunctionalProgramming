@@ -2,7 +2,7 @@
 -author("vitaliy").
 
 %% API
--export([create_endless_list/2, endless_list/2, endless_list_next/1]).
+-export([create_endless_list/2, endless_list/2, endless_list_next/1, endless_list_filter_next/2, endless_list_delete/1]).
 
 
 %% Sender-side code %%
@@ -25,3 +25,13 @@ endless_list_next(ListIter) ->
   receive
     Next -> Next
   end.
+
+endless_list_filter_next(ListIter, FilterFunc) ->
+  Value = endless_list_next(ListIter),
+  case FilterFunc(Value) of
+    true -> Value;
+    _ -> endless_list_filter_next(ListIter, FilterFunc)
+  end.
+
+endless_list_delete(ListIter) ->
+  ListIter ! finished.
