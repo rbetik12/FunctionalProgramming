@@ -6,8 +6,11 @@
   tail_recursion_start/0,
   recursion_start/0,
   filter_start/0,
-  map_start/0
+  map_start/0,
+  endless_list_start/0
 ]).
+
+-import(utils, [create_endless_list/2, endless_list/2, endless_list_next/1]).
 
 %% Common code %%
 
@@ -78,6 +81,18 @@ map(Start) ->
       X =/= 0
     ]
   ).
+
+%% Endless list implementation %%
+
+endless_list_start() ->
+  ListIter = create_endless_list(fun(X) -> X + 1 end, 1),
+  endless_list_iter(ListIter, 1).
+
+endless_list_iter(Iter, 10) -> ok;
+
+endless_list_iter(Iter, Count) ->
+  io:format("~B~n", [endless_list_next(Iter)]),
+  endless_list_iter(Iter, Count + 1).
 
 
 
