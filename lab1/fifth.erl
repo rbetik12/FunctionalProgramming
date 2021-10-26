@@ -63,7 +63,11 @@ filter_start() ->
 %% Map implementation %%
 
 map_start() ->
-  print_answer(map(2)).
+  print_answer(map(232792559)).
+
+check_item(true, Item) -> Item;
+
+check_item(_, _) -> 0.
 
 map(Start) ->
   lists:nth(
@@ -71,10 +75,7 @@ map(Start) ->
     [X ||
       X <- lists:map(
         fun(Item) ->
-          case is_divided_without_rem_on_seq(Item, 2, 20) of
-            true -> Item;
-            false -> 0
-          end
+          check_item(is_divided_without_rem_on_seq(Item, 2, 20), Item)
         end,
         lists:seq(Start, 300000000)
       ),
