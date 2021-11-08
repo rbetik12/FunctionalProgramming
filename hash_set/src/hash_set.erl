@@ -2,7 +2,7 @@
 -author("vitaliy").
 
 %% API
--export([new/0, put/2, print/1, remove/2, get_list/1, filter/2, map/2]).
+-export([new/0, put/2, print/1, remove/2, get_list/1, filter/2, map/2, foldr/3, foldl/3]).
 
 -record(hash_set, {list, hash_map}).
 
@@ -45,6 +45,10 @@ map(Function, #hash_set{list = List, hash_map = HashMap} = HashSet) ->
   MappedList = lists:map(Function, List),
 %%  io:format("~p~n", [MappedList]),
   clear_dup(MappedList, [], maps:new()).
+
+foldl(Function, Acc, #hash_set{list = List, hash_map = HashMap} = HashSet) -> lists:foldl(Function, Acc, List).
+
+foldr(Function, Acc, #hash_set{list = List, hash_map = HashMap} = HashSet) -> lists:foldr(Function, Acc, List).
 
 
 

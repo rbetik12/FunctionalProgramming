@@ -34,3 +34,8 @@ map_test() ->
       end
     end,
     HashSet)) == [-1, -3]).
+
+fold_test() ->
+  HashSet = hash_set:put(3, hash_set:put(-2, hash_set:put(5, hash_set:put(1, hash_set:new())))),
+  ?assert(hash_set:foldl(fun (X, Acc) -> X + Acc end, 0, HashSet) == 7),
+  ?assert(hash_set:foldr(fun (X, Acc) -> X + Acc end, 0, HashSet) == 7).
