@@ -23,3 +23,14 @@ del_test() ->
 filter_test() ->
   HashSet = hash_set:put(4, hash_set:put(-2, hash_set:put(1, hash_set:new()))),
   ?assert(hash_set:get_list(hash_set:filter(fun (X) -> X rem 2 == 0 end, HashSet)) == [-2, 4]).
+
+map_test() ->
+  HashSet = hash_set:put(-3, hash_set:put(3, hash_set:put(-1, hash_set:put(1, hash_set:new())))),
+  ?assert(hash_set:get_list(hash_set:map(
+    fun(X) ->
+      case X > 0 of
+        true -> -X;
+        _ -> X
+      end
+    end,
+    HashSet)) == [-1, -3]).
