@@ -1,0 +1,30 @@
+name: Erlang CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: erlang:22.0.7
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Setup Erlang
+      uses: gleam-lang/setup-erlang@v1.1.3
+      
+    - name: Compile
+      working-directory: ${{github.workspace}}/hash_set
+      run: rebar3 compile
+      
+    - name: Run tests
+      working-directory: ${{github.workspace}}/hash_set
+      run: rebar3 do eunit, ct
