@@ -20,11 +20,11 @@ remove(Element, #hash_set{list = List, hash_map = HashMap} = HashSet) ->
     _ -> #hash_set{list = lists:delete(Element, List), hash_map = maps:remove(Element, HashMap)}
   end.
 
-print(#hash_set{list = List, hash_map = HashMap} = HashSet) -> io:format("~p~n", [List]).
+print(#hash_set{list = List, hash_map = _}) -> io:format("~p~n", [List]).
 
-get_list(#hash_set{list = List, hash_map = HashMap} = HashSet) -> List.
+get_list(#hash_set{list = List, hash_map = _}) -> List.
 
-filter(Function, #hash_set{list = List, hash_map = HashMap} = HashSet) ->
+filter(Function, #hash_set{list = List, hash_map = HashMap}) ->
   FilteredList = [X || X <- List, Function(X)],
   DiffList = lists:subtract(List, FilteredList),
   #hash_set{list = FilteredList, hash_map = maps:without(DiffList, HashMap)}.
@@ -34,21 +34,19 @@ clear_dup(OldList, ClearedList, HashMap) ->
     0 -> #hash_set{list = ClearedList, hash_map = HashMap};
     _ ->
       Element = lists:nth(1, OldList),
-%%      io:format("OldList: ~p ClearedList: ~p Element: ~B~n", [OldList, ClearedList, Element]),
       case maps:get(Element, HashMap, none) of
         none -> clear_dup(OldList -- [Element], ClearedList ++ [Element], maps:put(Element, Element, HashMap));
         _ -> clear_dup(OldList -- [Element], ClearedList, HashMap)
       end
   end.
 
-map(Function, #hash_set{list = List, hash_map = HashMap} = HashSet) ->
+map(Function, #hash_set{list = List, hash_map = _}) ->
   MappedList = lists:map(Function, List),
-%%  io:format("~p~n", [MappedList]),
   clear_dup(MappedList, [], maps:new()).
 
-foldl(Function, Acc, #hash_set{list = List, hash_map = HashMap} = HashSet) -> lists:foldl(Function, Acc, List).
+foldl(Function, Acc, #hash_set{list = List, hash_map = _}) -> lists:foldl(Function, Acc, List).
 
-foldr(Function, Acc, #hash_set{list = List, hash_map = HashMap} = HashSet) -> lists:foldr(Function, Acc, List).
+foldr(Function, Acc, #hash_set{list = List, hash_map = _}) -> lists:foldr(Function, Acc, List).
 
 
 
