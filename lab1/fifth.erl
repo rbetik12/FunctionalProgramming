@@ -27,7 +27,7 @@ is_divided_without_rem_on_seq(Number, Start, Finish) ->
 
 tail_recursion_start() -> tail_recursion(1, false).
 
-tail_recursion(300000000, Result) -> print_answer(0);
+tail_recursion(300000000, _) -> print_answer(0);
 
 tail_recursion(Number, true) -> print_answer(Number - 1);
 
@@ -41,13 +41,13 @@ recursion(300000000) -> 0;
 
 recursion(Number) ->
   Result = recursion(Number + 1),
-  if
-    Result == 0 ->
+  case Result of
+    0 ->
       case is_divided_without_rem_on_seq(Number, 2, 20) of
         true -> Number;
         false -> Result
       end;
-    true -> Result
+    _ -> Result
   end.
 
 %% Filter implementation %%
@@ -63,7 +63,7 @@ filter_start() ->
 %% Map implementation %%
 
 map_start() ->
-  print_answer(map(232792559)).
+  print_answer(map(2)).
 
 check_item(true, Item) -> Item;
 
