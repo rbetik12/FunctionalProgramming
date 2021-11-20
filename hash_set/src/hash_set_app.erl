@@ -5,18 +5,10 @@
 -export([start/0, stop/1]).
 
 start() ->
-  HashSet = hash_set:new(),
-  HashSet_ = hash_set:put(2, HashSet),
-  HashSet__ = hash_set:put(3, hash_set:put(3, hash_set:put(1, HashSet_))),
-%%  hash_set:print(hash_set:map(
-%%    fun(X) ->
-%%      case X > 0 of
-%%        true -> -X;
-%%        _ -> X
-%%      end
-%%    end,
-%%    HashSet__)).
-  hash_set:foldl(fun (X, Acc) -> X + Acc end, 0, HashSet__).
+  HashMap = hash_map:new(),
+  NewHashMap = hash_map:append(key1, 5, HashMap),
+  io:format("~p~n", [NewHashMap]),
+  io:format("~p~n", [hash_map:get(key1, NewHashMap)]).
 
 stop(_State) ->
   ok.
