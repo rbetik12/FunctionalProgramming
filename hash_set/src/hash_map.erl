@@ -26,17 +26,17 @@ from_key_value_list(List) ->
   ).
 
 append(Key, Value, #hash_map{buckets = Buckets}) ->
-  Slot = erlang:phash(Key, ?buckets_amount),
+  Slot = erlang:phash2(Key, ?buckets_amount),
   #hash_map{buckets = lists:sublist(Buckets, Slot - 1) ++
     [bucket_modify(lists:nth(Slot, Buckets), Key, Value)] ++
     lists:sublist(Buckets, Slot + 1, ?buckets_amount - Slot + 1)}.
 
 get(Key, #hash_map{buckets = Buckets}) ->
-  Slot = erlang:phash(Key, ?buckets_amount),
+  Slot = erlang:phash2(Key, ?buckets_amount),
   element(3, bucket_get(lists:nth(Slot, Buckets), Key)).
 
 remove(Key, #hash_map{buckets = Buckets}) ->
-  Slot = erlang:phash(Key, ?buckets_amount),
+  Slot = erlang:phash2(Key, ?buckets_amount),
   #hash_map{buckets = lists:sublist(Buckets, Slot - 1) ++
     [bucket_modify(lists:nth(Slot, Buckets), Key)] ++
     lists:sublist(Buckets, Slot + 1, ?buckets_amount - Slot + 1)}.
