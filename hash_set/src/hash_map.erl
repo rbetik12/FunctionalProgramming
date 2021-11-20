@@ -2,7 +2,7 @@
 -author("vitaliy").
 
 %% API
--export([new/0, append/3, get/2, remove/2]).
+-export([new/0, append/3, get/2, remove/2, from_key_value_list/1]).
 
 -define(buckets_amount, 16).
 
@@ -15,6 +15,15 @@ make_buckets(Size, Buckets) ->
   make_buckets(Size - 1, lists:append(Buckets, [[]])).
 
 new() -> #hash_map{buckets = make_buckets(?buckets_amount, [])}.
+
+from_key_value_list(List) ->
+  lists:foldl(
+    fun(Item, HashMap) ->
+      append(element(1, Item), element(2, Item), HashMap)
+    end,
+    new(),
+    List
+  ).
 
 append(Key, Value, #hash_map{buckets = Buckets}) ->
   Slot = erlang:phash(Key, ?buckets_amount),
@@ -44,7 +53,7 @@ bucket_modify(Bucket, Key) ->
 
 bucket_get(Bucket, Key) ->
   case lists:keyfind(Key, 2, Bucket) of
-    false -> false;
+    false -> {false, false, false};
     Result -> Result
   end.
 
