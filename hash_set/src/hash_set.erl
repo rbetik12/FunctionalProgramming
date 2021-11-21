@@ -2,7 +2,21 @@
 -author("vitaliy").
 
 %% API
--export([new/0, put/2, print/1, remove/2, get_list/1, filter/2, map/2, foldr/3, foldl/3, from_list/1, compare/2]).
+-export([
+  new/0,
+  put/2,
+  print/1,
+  remove/2,
+  get_list/1,
+  filter/2,
+  map/2,
+  foldr/3,
+  foldl/3,
+  from_list/1,
+  compare/2,
+  add/2,
+  subtract/2
+]).
 
 -record(hash_set, {list, hash_map}).
 
@@ -59,6 +73,16 @@ map(Function, #hash_set{list = List, hash_map = _}) ->
 foldl(Function, Acc, #hash_set{list = List, hash_map = _}) -> lists:foldl(Function, Acc, List).
 
 foldr(Function, Acc, #hash_set{list = List, hash_map = _}) -> lists:foldr(Function, Acc, List).
+
+%% monoid functions %%
+
+add(#hash_set{list = List1, hash_map = _}, #hash_set{list = List2, hash_map = _}) ->
+  MergedList = List1 ++ List2,
+  clear_dup(MergedList, [], hash_map:new()).
+
+subtract(#hash_set{list = List1, hash_map = _}, #hash_set{list = List2, hash_map = _}) ->
+  SubtractedList = List1 -- List2,
+  clear_dup(SubtractedList, [], hash_map:new()).
 
 
 

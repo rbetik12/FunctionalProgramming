@@ -53,3 +53,27 @@ remove_different_types_test() ->
   NewHashSet = hash_set:remove("345", HashSet),
   ?assert(hash_set:compare(NewHashSet, hash_set:from_list([kek, lol]))).
 
+%% Property-based testing %%
+
+add_test() ->
+  HashSet1 = hash_set:from_list([kek, lol]),
+  HashSet2 = hash_set:from_list([1, 2, 3]),
+  ResultHashSet = hash_set:add(HashSet1, HashSet2),
+  InverseResultHashSet = hash_set:add(HashSet2, HashSet1),
+  ?assert(hash_set:compare(ResultHashSet, InverseResultHashSet)).
+
+subtract_test() ->
+  HashSet1 = hash_set:from_list([kek, lol, 1]),
+  HashSet2 = hash_set:from_list([1, 2, 3]),
+  ResultHashSet = hash_set:subtract(HashSet1, HashSet2),
+  InverseResultHashSet = hash_set:subtract(HashSet2, HashSet1),
+  ?assert(hash_set:compare(ResultHashSet, InverseResultHashSet) == false).
+
+zero_element_test() ->
+  ZeroHashSet = hash_set:from_list([]),
+  HashSet = hash_set:from_list([1, 2, 3]),
+  ?assert(hash_set:compare(ZeroHashSet, ZeroHashSet)),
+  ?assert(hash_set:compare(hash_set:add(ZeroHashSet, HashSet), hash_set:add(HashSet, ZeroHashSet)) == true),
+  ?assert(hash_set:compare(hash_set:subtract(ZeroHashSet, HashSet), ZeroHashSet) == true),
+  ?assert(hash_set:compare(hash_set:subtract(HashSet, ZeroHashSet), HashSet) == true).
+
