@@ -6,18 +6,18 @@
 
 -record(hash_set, {list, hash_map}).
 
-new() -> #hash_set{list = [], hash_map = maps:new()}.
+new() -> #hash_set{list = [], hash_map = hash_map:new()}.
 
 put(Element, #hash_set{list = List, hash_map = HashMap} = HashSet) ->
-  case maps:get(Element, HashMap, none) of
-    none -> #hash_set{list = List ++ [Element], hash_map = maps:put(Element, Element, HashMap)};
+  case hash_map:find(Element, HashMap) of
+    false -> #hash_set{list = List ++ [Element], hash_map = hash_map:append(Element, Element, HashMap)};
     _ -> HashSet
   end.
 
 remove(Element, #hash_set{list = List, hash_map = HashMap} = HashSet) ->
-  case maps:get(Element, HashMap, none) of
+  case hash_map:find(Element, HashMap) of
     none -> HashSet;
-    _ -> #hash_set{list = lists:delete(Element, List), hash_map = maps:remove(Element, HashMap)}
+    _ -> #hash_set{list = lists:delete(Element, List), hash_map = hash_map:remove(Element, HashMap)}
   end.
 
 print(#hash_set{list = List, hash_map = _}) -> io:format("~p~n", [List]).
@@ -34,15 +34,15 @@ clear_dup(OldList, ClearedList, HashMap) ->
     0 -> #hash_set{list = ClearedList, hash_map = HashMap};
     _ ->
       Element = lists:nth(1, OldList),
-      case maps:get(Element, HashMap, none) of
-        none -> clear_dup(OldList -- [Element], ClearedList ++ [Element], maps:put(Element, Element, HashMap));
+      case hash_map:get(Element, HashMap) of
+        false -> clear_dup(OldList -- [Element], ClearedList ++ [Element], hash_map:append(Element, Element, HashMap));
         _ -> clear_dup(OldList -- [Element], ClearedList, HashMap)
       end
   end.
 
 map(Function, #hash_set{list = List, hash_map = _}) ->
   MappedList = lists:map(Function, List),
-  clear_dup(MappedList, [], maps:new()).
+  clear_dup(MappedList, [], hash_map:new()).
 
 foldl(Function, Acc, #hash_set{list = List, hash_map = _}) -> lists:foldl(Function, Acc, List).
 
