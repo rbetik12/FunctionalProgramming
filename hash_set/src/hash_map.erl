@@ -2,9 +2,18 @@
 -author("vitaliy").
 
 %% API
--export([new/0, append/3, get/2, remove/2, from_key_value_list/1]).
+-export([
+  new/0,
+  append/3,
+  append_with_hash/4,
+  get/2,
+  get_with_hash/3,
+  remove/2,
+  from_key_value_list/1,
+  from_key_value_list_with_hash/2
+]).
 
--define(buckets_amount, 16).
+-define(buckets_amount, 512).
 
 -record(hash_map, {buckets}).
 -record(hash_map_entry, {key, value}).
@@ -25,15 +34,20 @@ from_key_value_list(List) ->
     List
   ).
 
-append(Key, Value, #hash_map{buckets = Buckets}) ->
-  Slot = erlang:phash2(Key, ?buckets_amount),
+append_impl(Key, Value, HashFunction, #hash_map{buckets = Buckets}) ->
+  Slot = HashFunction(Key, ?buckets_amount),
   #hash_map{buckets = lists:sublist(Buckets, Slot - 1) ++
     [bucket_modify(lists:nth(Slot, Buckets), Key, Value)] ++
     lists:sublist(Buckets, Slot + 1, ?buckets_amount - Slot + 1)}.
 
-get(Key, #hash_map{buckets = Buckets}) ->
-  Slot = erlang:phash2(Key, ?buckets_amount),
+get_impl(Key, HashFunction, #hash_map{buckets = Buckets}) ->
+  Slot = HashFunction(Key, ?buckets_amount),
   element(3, bucket_get(lists:nth(Slot, Buckets), Key)).
+
+append(Key, Value, #hash_map{buckets = _} = HashMap) -> append_impl(Key, Value, fun erlang:phash2/2, HashMap).
+
+get(Key, #hash_map{buckets = _} = HashMap) -> get_impl(Key, fun erlang:phash2/2, HashMap).
+
 
 remove(Key, #hash_map{buckets = Buckets}) ->
   Slot = erlang:phash2(Key, ?buckets_amount),
@@ -43,17 +57,35 @@ remove(Key, #hash_map{buckets = Buckets}) ->
 
 
 bucket_modify(Bucket, Key, Value) ->
-  case lists:keyfind(Key, 2, Bucket) of
+  NewBucket = case lists:keyfind(Key, 2, Bucket) of
     false -> lists:append(Bucket, [#hash_map_entry{key = Key, value = Value}]);
     _ -> lists:keyreplace(Key, 2, Bucket, #hash_map_entry{key = Key, value = Value})
-  end.
+  end,
+  NewBucket.
 
 bucket_modify(Bucket, Key) ->
   lists:keydelete(Key, 2, Bucket).
 
 bucket_get(Bucket, Key) ->
+%%  io:format("~p~n", [Bucket]),
   case lists:keyfind(Key, 2, Bucket) of
     false -> {false, false, false};
     Result -> Result
   end.
+
+%% Functions for unit tests. Use with caution! %%
+
+from_key_value_list_with_hash(List, HashFunction) ->
+  lists:foldl(
+    fun(Item, HashMap) ->
+      append_with_hash(element(1, Item), element(2, Item), HashFunction, HashMap)
+    end,
+    new(),
+    List
+  ).
+
+append_with_hash(Key, Value, HashFunction, #hash_map{buckets = _} = HashMap) ->
+  append_impl(Key, Value, HashFunction, HashMap).
+
+get_with_hash(Key, HashFunction, #hash_map{buckets = _} = HashMap) -> get_impl(Key, HashFunction, HashMap).
 
