@@ -11,7 +11,8 @@
   remove/2,
   from_key_value_list/1,
   from_key_value_list_with_hash/2,
-  find/2
+  find/2,
+  without/2
 ]).
 
 -define(buckets_amount, 512).
@@ -59,6 +60,14 @@ remove(Key, #hash_map{buckets = Buckets}) ->
     [bucket_modify(lists:nth(Slot, Buckets), Key)] ++
     lists:sublist(Buckets, Slot + 1, ?buckets_amount - Slot + 1)}.
 
+without(ListOfKeys, #hash_map{buckets = _} = HashMap) ->
+  lists:foldl(
+    fun (Key, HashMap) ->
+      remove(Key, HashMap)
+    end,
+    HashMap,
+    ListOfKeys
+  ).
 
 bucket_modify(Bucket, Key, Value) ->
   case lists:keyfind(Key, 2, Bucket) of

@@ -27,7 +27,7 @@ get_list(#hash_set{list = List, hash_map = _}) -> List.
 filter(Function, #hash_set{list = List, hash_map = HashMap}) ->
   FilteredList = [X || X <- List, Function(X)],
   DiffList = lists:subtract(List, FilteredList),
-  #hash_set{list = FilteredList, hash_map = maps:without(DiffList, HashMap)}.
+  #hash_set{list = FilteredList, hash_map = hash_map:without(DiffList, HashMap)}.
 
 clear_dup(OldList, ClearedList, HashMap) ->
   case length(OldList) of

@@ -26,3 +26,10 @@ find_test() ->
   ?assert(hash_map:find(kek, HashMap) == true),
   ?assert(hash_map:find(keke, HashMap) == false).
 
+without_test() ->
+  HashMap = hash_map:from_key_value_list([{kek, 2}, {lol, 4}]),
+  WithoutHashMap = hash_map:without([kek, keke], HashMap),
+  ?assert(hash_map:get(kek, WithoutHashMap) == false),
+  ?assert(hash_map:get(keke, WithoutHashMap) == false),
+  ?assert(hash_map:get(lol, WithoutHashMap) == 4).
+
