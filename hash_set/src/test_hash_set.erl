@@ -3,41 +3,30 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-%% unit-testing %%
-
 filter_test() ->
-  HashSet = hash_set:put(4, hash_set:put(-2, hash_set:put(1, hash_set:new()))),
-  ?assert(hash_set:get_list(hash_set:filter(fun(X) -> X rem 2 == 0 end, HashSet)) == [-2, 4]).
+  FilteredHashSet = hash_set:filter(fun(X) -> X rem 2 == 0 end, hash_set:from_list([4, -2, 1])),
+  CorrectHashSet = hash_set:from_list([-2, 4]),
+  ?assert(hash_set:compare(FilteredHashSet, CorrectHashSet) == true).
 
 map_test() ->
-  HashSet = hash_set:put(-3, hash_set:put(3, hash_set:put(-1, hash_set:put(1, hash_set:new())))),
-  ?assert(hash_set:get_list(hash_set:map(
+  MappedHashSet = hash_set:map(
     fun(X) ->
       case X > 0 of
         true -> -X;
         _ -> X
       end
     end,
-    HashSet)) == [-1, -3]).
+    hash_set:from_list([1, -3])),
+  CorrectHashSet = hash_set:from_list([-1, -3]),
+  ?assert(hash_set:compare(MappedHashSet, CorrectHashSet) == true).
 
 fold_test() ->
-  HashSet = hash_set:put(3, hash_set:put(-2, hash_set:put(5, hash_set:put(1, hash_set:new())))),
+  HashSet = hash_set:from_list([3, -2, 5, 1]),
   ?assert(hash_set:foldl(fun(X, Acc) -> X + Acc end, 0, HashSet) == 7),
   ?assert(hash_set:foldr(fun(X, Acc) -> X + Acc end, 0, HashSet) == 7).
 
-%% Let's break some stuff %%
-
-map_then_add_element_test() ->
-  HashSet = hash_set:put(4, hash_set:put(3, hash_set:put(5, hash_set:put(2, hash_set:new())))),
-  MappedHashSet = hash_set:map(
-    fun(X) ->
-      X + 2
-    end,
-    HashSet),
-  ?assert(hash_set:get_list(hash_set:put(6, hash_set:remove(6, MappedHashSet))) == [4, 7, 5, 6]).
-
 filter_atomics_test() ->
-  HashSet = hash_set:put(chebyrek, hash_set:put(lol, hash_set:put(kek, hash_set:new()))),
+  HashSet = hash_set:from_list([lol, kek, chebyrek]),
   FilteredHashSet = hash_set:filter(
     fun(X) ->
       case X of
@@ -45,10 +34,10 @@ filter_atomics_test() ->
         _ -> false
       end
     end, HashSet),
-  ?assert(hash_set:get_list(FilteredHashSet) == [kek]).
+  ?assert(hash_set:compare(FilteredHashSet, hash_set:from_list([kek]))).
 
 filter_then_add_element_test() ->
-  HashSet = hash_set:put(chebyrek, hash_set:put(lol, hash_set:put(kek, hash_set:new()))),
+  HashSet = hash_set:from_list([lol, kek, chebyrek]),
   FilteredHashSet = hash_set:filter(
     fun(X) ->
       case X of
@@ -56,10 +45,11 @@ filter_then_add_element_test() ->
         _ -> false
       end
     end, HashSet),
-  ?assert(hash_set:get_list(hash_set:put(lol, FilteredHashSet)) == [kek, lol]).
+  AddedHashSet = hash_set:put(lol, FilteredHashSet),
+  ?assert(hash_set:compare(AddedHashSet, hash_set:from_list([kek, lol])) == true).
 
 remove_different_types_test() ->
-  HashSet = hash_set:put("345", hash_set:put(2, hash_set:put(kek, hash_set:new()))),
+  HashSet = hash_set:from_list(["345", kek, lol]),
   NewHashSet = hash_set:remove("345", HashSet),
-  ?assert(hash_set:get_list(NewHashSet) == [kek, 2]).
+  ?assert(hash_set:compare(NewHashSet, hash_set:from_list([kek, lol]))).
 

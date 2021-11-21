@@ -2,11 +2,23 @@
 -author("vitaliy").
 
 %% API
--export([new/0, put/2, print/1, remove/2, get_list/1, filter/2, map/2, foldr/3, foldl/3]).
+-export([new/0, put/2, print/1, remove/2, get_list/1, filter/2, map/2, foldr/3, foldl/3, from_list/1, compare/2]).
 
 -record(hash_set, {list, hash_map}).
 
 new() -> #hash_set{list = [], hash_map = hash_map:new()}.
+
+from_list(ListOfValues) ->
+  lists:foldl(
+    fun (Value, HashSet) ->
+      hash_set:put(Value, HashSet)
+    end,
+    hash_set:new(),
+    ListOfValues
+  ).
+
+compare(#hash_set{list = _, hash_map = _} = HashSet1, #hash_set{list = _, hash_map = _} = HashSet2) ->
+  lists:sort(hash_set:get_list(HashSet1)) == lists:sort(hash_set:get_list(HashSet2)).
 
 put(Element, #hash_set{list = List, hash_map = HashMap} = HashSet) ->
   case hash_map:find(Element, HashMap) of
