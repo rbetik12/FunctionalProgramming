@@ -1,6 +1,7 @@
 -module(test_hash_set).
 -author("vitaliy").
 
+-include_lib("proper/include/proper.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
 filter_test() ->
@@ -55,25 +56,69 @@ remove_different_types_test() ->
 
 %% Property-based testing %%
 
-add_test() ->
-  HashSet1 = hash_set:from_list([kek, lol]),
-  HashSet2 = hash_set:from_list([1, 2, 3]),
-  ResultHashSet = hash_set:add(HashSet1, HashSet2),
-  InverseResultHashSet = hash_set:add(HashSet2, HashSet1),
-  ?assert(hash_set:compare(ResultHashSet, InverseResultHashSet)).
+prop_addition_commutativity() ->
+  ?FORALL(
+    {L1, L2},
+    {list(integer()), list(integer())},
+    begin
+      HashSet1 = hash_set:from_list(L1),
+      HashSet2 = hash_set:from_list(L2),
+      Result = hash_set:add(HashSet1, HashSet2),
+      InverseResult = hash_set:add(HashSet2, HashSet1),
+      hash_set:compare(Result, InverseResult)
+    end
+  ).
 
-subtract_test() ->
-  HashSet1 = hash_set:from_list([kek, lol, 1]),
-  HashSet2 = hash_set:from_list([1, 2, 3]),
-  ResultHashSet = hash_set:subtract(HashSet1, HashSet2),
-  InverseResultHashSet = hash_set:subtract(HashSet2, HashSet1),
-  ?assert(hash_set:compare(ResultHashSet, InverseResultHashSet) == false).
+prop_subtraction_not_commutative() ->
+  ?FORALL(
+    {L1, L2},
+    {list(integer()), list(integer())},
+    begin
+      HashSet1 = hash_set:from_list(L1),
+      HashSet2 = hash_set:from_list(L2),
+      Result = hash_set:subtract(HashSet1, HashSet2),
+      InverseResult = hash_set:subtract(HashSet2, HashSet1),
+      case hash_set:compare(HashSet1, HashSet2) == true of
+        true -> true;
+        _ -> hash_set:compare(Result, InverseResult) == false
+      end
+    end
+  ).
 
-zero_element_test() ->
-  ZeroHashSet = hash_set:from_list([]),
-  HashSet = hash_set:from_list([1, 2, 3]),
-  ?assert(hash_set:compare(ZeroHashSet, ZeroHashSet)),
-  ?assert(hash_set:compare(hash_set:add(ZeroHashSet, HashSet), hash_set:add(HashSet, ZeroHashSet)) == true),
-  ?assert(hash_set:compare(hash_set:subtract(ZeroHashSet, HashSet), ZeroHashSet) == true),
-  ?assert(hash_set:compare(hash_set:subtract(HashSet, ZeroHashSet), HashSet) == true).
+prop_addition_zero_element_commutativity() ->
+  ?FORALL(
+    {L1, L2},
+    {list(), list(integer())},
+    begin
+      ZeroHashSet = hash_set:from_list(L1),
+      HashSet = hash_set:from_list(L2),
+      hash_set:compare(hash_set:add(ZeroHashSet, HashSet), hash_set:add(HashSet, ZeroHashSet))
+    end
+  ).
+
+prop_subtract_zero_element_commutativity() ->
+  ?FORALL(
+    {L1, L2},
+    {list(), list(integer())},
+    begin
+      ZeroHashSet = hash_set:from_list(L1),
+      HashSet = hash_set:from_list(L2),
+      case L2 == [] of
+        true -> true;
+        _ -> hash_set:compare(hash_set:subtract(ZeroHashSet, HashSet), hash_set:subtract(HashSet, ZeroHashSet)) == false
+      end
+    end
+  ).
+
+add_commutative_test() ->
+  ?assert(proper:quickcheck(prop_addition_commutativity(), [{to_file, user}, {numtests, 1000}]) == true).
+
+subtract_not_commutative_test() ->
+  ?assert(proper:quickcheck(prop_subtraction_not_commutative(), [{to_file, user}, {numtests, 1000}]) == true).
+
+add_zero_element_commutativity_test() ->
+  ?assert(proper:quickcheck(prop_addition_zero_element_commutativity(), [{to_file, user}, {numtests, 1000}]) == true).
+
+subtract_zero_element_commutativity_test() ->
+  ?assert(proper:quickcheck(prop_subtract_zero_element_commutativity(), [{to_file, user}, {numtests, 1000}]) == true).
 

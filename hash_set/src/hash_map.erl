@@ -37,13 +37,13 @@ from_key_value_list(List) ->
   ).
 
 append_impl(Key, Value, HashFunction, #hash_map{buckets = Buckets}) ->
-  Slot = HashFunction(Key, ?buckets_amount),
+  Slot = HashFunction(Key, ?buckets_amount) + 1,
   #hash_map{buckets = lists:sublist(Buckets, Slot - 1) ++
     [bucket_modify(lists:nth(Slot, Buckets), Key, Value)] ++
     lists:sublist(Buckets, Slot + 1, ?buckets_amount - Slot + 1)}.
 
 get_impl(Key, HashFunction, #hash_map{buckets = Buckets}) ->
-  Slot = HashFunction(Key, ?buckets_amount),
+  Slot = HashFunction(Key, ?buckets_amount) + 1,
   element(3, bucket_get(lists:nth(Slot, Buckets), Key)).
 
 append(Key, Value, #hash_map{buckets = _} = HashMap) -> append_impl(Key, Value, fun erlang:phash2/2, HashMap).
@@ -51,11 +51,11 @@ append(Key, Value, #hash_map{buckets = _} = HashMap) -> append_impl(Key, Value, 
 get(Key, #hash_map{buckets = _} = HashMap) -> get_impl(Key, fun erlang:phash2/2, HashMap).
 
 find(Key, #hash_map{buckets = Buckets}) ->
-  Slot = erlang:phash2(Key, ?buckets_amount),
+  Slot = erlang:phash2(Key, ?buckets_amount) + 1,
   bucket_find(lists:nth(Slot, Buckets), Key).
 
 remove(Key, #hash_map{buckets = Buckets}) ->
-  Slot = erlang:phash2(Key, ?buckets_amount),
+  Slot = erlang:phash2(Key, ?buckets_amount) + 1,
   #hash_map{buckets = lists:sublist(Buckets, Slot - 1) ++
     [bucket_modify(lists:nth(Slot, Buckets), Key)] ++
     lists:sublist(Buckets, Slot + 1, ?buckets_amount - Slot + 1)}.
