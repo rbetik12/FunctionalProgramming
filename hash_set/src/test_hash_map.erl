@@ -21,3 +21,8 @@ append_with_collision_test() ->
   ?assert(hash_map:get_with_hash(kek, fun custom_hash_function/2, HashMap) == 2),
   ?assert(hash_map:get_with_hash(lol, fun custom_hash_function/2, HashMap) == 5).
 
+find_test() ->
+  HashMap = hash_map:from_key_value_list([{kek, 1}, {lol, 2}, {arbidol, 3}]),
+  ?assert(hash_map:find(kek, HashMap) == true),
+  ?assert(hash_map:find(keke, HashMap) == false).
+

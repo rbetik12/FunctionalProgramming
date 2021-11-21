@@ -10,7 +10,8 @@
   get_with_hash/3,
   remove/2,
   from_key_value_list/1,
-  from_key_value_list_with_hash/2
+  from_key_value_list_with_hash/2,
+  find/2
 ]).
 
 -define(buckets_amount, 512).
@@ -48,6 +49,9 @@ append(Key, Value, #hash_map{buckets = _} = HashMap) -> append_impl(Key, Value, 
 
 get(Key, #hash_map{buckets = _} = HashMap) -> get_impl(Key, fun erlang:phash2/2, HashMap).
 
+find(Key, #hash_map{buckets = Buckets}) ->
+  Slot = erlang:phash2(Key, ?buckets_amount),
+  bucket_find(lists:nth(Slot, Buckets), Key).
 
 remove(Key, #hash_map{buckets = Buckets}) ->
   Slot = erlang:phash2(Key, ?buckets_amount),
@@ -57,20 +61,24 @@ remove(Key, #hash_map{buckets = Buckets}) ->
 
 
 bucket_modify(Bucket, Key, Value) ->
-  NewBucket = case lists:keyfind(Key, 2, Bucket) of
+  case lists:keyfind(Key, 2, Bucket) of
     false -> lists:append(Bucket, [#hash_map_entry{key = Key, value = Value}]);
     _ -> lists:keyreplace(Key, 2, Bucket, #hash_map_entry{key = Key, value = Value})
-  end,
-  NewBucket.
+  end.
 
 bucket_modify(Bucket, Key) ->
   lists:keydelete(Key, 2, Bucket).
 
 bucket_get(Bucket, Key) ->
-%%  io:format("~p~n", [Bucket]),
   case lists:keyfind(Key, 2, Bucket) of
     false -> {false, false, false};
     Result -> Result
+  end.
+
+bucket_find(Bucket, Key) ->
+  case lists:keyfind(Key, 2, Bucket) of
+    false -> false;
+    _ -> true
   end.
 
 %% Functions for unit tests. Use with caution! %%
