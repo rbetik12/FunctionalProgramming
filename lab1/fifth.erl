@@ -10,7 +10,7 @@
   endless_list_start/0
 ]).
 
--import(utils, [create_endless_list/2, endless_list/2, endless_list_next/1]).
+-import(endless_list, []).
 
 %% Common code %%
 
@@ -18,7 +18,7 @@ print_answer(0) -> io:format("Answer wasn't found in range [100, 300000000] ~n")
 print_answer(Ans) -> io:format("Answer was found in range [100, 300000000]. The answer is: ~B~n", [Ans]).
 
 is_divided_result(0) -> true;
-is_divided_result(Len) -> false.
+is_divided_result(_) -> false.
 
 is_divided_without_rem_on_seq(Number, Start, Finish) ->
   is_divided_result(length([X || X <- lists:seq(Start, Finish), Number rem X =/= 0])).
@@ -40,14 +40,13 @@ recursion_start() -> print_answer(recursion(1)).
 recursion(300000000) -> 0;
 
 recursion(Number) ->
-  Result = recursion(Number + 1),
-  case Result of
-    0 ->
+  case recursion(Number + 1) of
+    Result when Result == 0 ->
       case is_divided_without_rem_on_seq(Number, 2, 20) of
         true -> Number;
         false -> Result
       end;
-    _ -> Result
+    Result when Result =/= 0 -> Result
   end.
 
 %% Filter implementation %%
@@ -86,13 +85,13 @@ map(Start) ->
 %% Endless list implementation %%
 
 endless_list_start() ->
-  ListIter = create_endless_list(fun(X) -> X + 1 end, 1),
+  ListIter = endless_list:create(fun(X) -> X + 1 end, 1),
   print_answer(endless_list_find_solution(ListIter, 1)).
 
-endless_list_find_solution(Iter, 300000000) -> 0;
+endless_list_find_solution(_, 300000000) -> 0;
 
 endless_list_find_solution(Iter, Count) ->
-  Value = endless_list_next(Iter),
+  Value = endless_list:next(Iter),
   case is_divided_without_rem_on_seq(Value, 1, 20) of
     true -> Value;
     _ -> endless_list_find_solution(Iter, Count + 1)
