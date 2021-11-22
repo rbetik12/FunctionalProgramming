@@ -113,6 +113,7 @@ endless_list_start() -> endless_list_find_solution(1, 0, 0, maps:new()).
 
 fill_map_loop(ListIter, Counter, M, Max, UsedPrimes) ->
   case endless_list:filter_next(ListIter, fun is_prime/1) of
+    Error when Error == error -> exit("Endless list generator timed out!");
     NextPrime when NextPrime > 997 -> {Max, UsedPrimes};
     NextPrime when NextPrime =< 997 ->
       MaxUsedPrimesTuple = fill_map(NextPrime, Counter, M, Max, UsedPrimes),

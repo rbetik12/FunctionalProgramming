@@ -92,9 +92,13 @@ endless_list_find_solution(_, 300000000) -> 0;
 
 endless_list_find_solution(Iter, Count) ->
   Value = endless_list:next(Iter),
-  case is_divided_without_rem_on_seq(Value, 1, 20) of
-    true -> Value;
-    _ -> endless_list_find_solution(Iter, Count + 1)
+  case Value of
+    error -> exit("Endless list timed out!");
+    _ ->
+      case is_divided_without_rem_on_seq(Value, 1, 20) of
+        true -> Value;
+        _ -> endless_list_find_solution(Iter, Count + 1)
+      end
   end.
 
 
