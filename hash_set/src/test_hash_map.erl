@@ -3,6 +3,19 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+append_test() ->
+  HashMap = hash_map:new(),
+  AppendedHashMap = hash_map:append(1, 2, HashMap),
+  ?assert(hash_map:get(1, AppendedHashMap) == 2),
+  ?assert(hash_map:get(2, AppendedHashMap) == false).
+
+from_key_value_list_test() ->
+  HashMap = hash_map:append(1, 2, hash_map:new()),
+  HashMapFromList = hash_map:from_key_value_list([{1, 2}]),
+  ?assert(hash_map:get(1, HashMap) == hash_map:get(1, HashMapFromList)),
+  ?assert(hash_map:get(2, HashMap) == hash_map:get(2, HashMapFromList)),
+  ?assert(hash_map:get(2, HashMap) == false).
+
 remove_test() ->
   HashMap = hash_map:from_key_value_list([{kek, 1}, {lol, 2}, {arbidol, 3}]),
   RemovedHashMap = hash_map:remove(kek, HashMap),

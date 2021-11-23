@@ -4,6 +4,27 @@
 -include_lib("proper/include/proper.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
+put_test() ->
+  HashSet = hash_set:new(),
+  PutHashSet = hash_set:put(1, HashSet),
+  ?assert(hash_set:get_list(PutHashSet) == [1]).
+
+remove_test() ->
+  HashSet = hash_set:new(),
+  PutHashSet = hash_set:put(1, HashSet),
+  RemoveHashSet = hash_set:remove(1, PutHashSet),
+  ?assert(hash_set:get_list(RemoveHashSet) == []).
+
+from_list_test() ->
+  HashSetFromList = hash_set:from_list([1]),
+  HashSet = hash_set:put(1, hash_set:new()),
+  ?assert(hash_set:get_list(HashSetFromList) == hash_set:get_list(HashSet)).
+
+compare_test() ->
+  HashSet1 = hash_set:from_list([2, 3, 4]),
+  HashSet2 = hash_set:from_list([3, 4, 2]),
+  ?assert(hash_set:compare(HashSet1, HashSet2) == true).
+
 filter_test() ->
   FilteredHashSet = hash_set:filter(fun(X) -> X rem 2 == 0 end, hash_set:from_list([4, -2, 1])),
   CorrectHashSet = hash_set:from_list([-2, 4]),
@@ -103,7 +124,7 @@ prop_subtract_zero_element_commutativity() ->
     begin
       ZeroHashSet = hash_set:from_list(L1),
       HashSet = hash_set:from_list(L2),
-      case L2 == [] of
+      case L1 == L2 of
         true -> true;
         _ -> hash_set:compare(hash_set:subtract(ZeroHashSet, HashSet), hash_set:subtract(HashSet, ZeroHashSet)) == false
       end
