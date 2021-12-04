@@ -11,7 +11,9 @@
   from_key_value_list/1,
   from_key_value_list_with_hash/2,
   find/2,
-  without/2
+  without/2,
+  get_key_value_list/1,
+  get_value_list/1
 ]).
 
 -record(hash_map, {buckets, buckets_amount, hash_function}).
@@ -96,3 +98,16 @@ from_key_value_list_with_hash(List, HashFunction) ->
     List
   ).
 
+get_key_value_list(#hash_map{buckets = Buckets, buckets_amount = _, hash_function = _}) ->
+  lists:foldl(
+    fun(Bucket, List) ->
+      KeyValueList = lists:map(fun(Item) -> {element(2, Item), element(3, Item)} end, Bucket),
+      [X || X <- List ++ KeyValueList]
+    end,
+    [],
+    Buckets
+  ).
+
+get_value_list(#hash_map{buckets = _, buckets_amount = _, hash_function = _} = HashMap) ->
+  KeyValueList = get_key_value_list(HashMap),
+  lists:map(fun (KeyValueTuple) -> element(2, KeyValueTuple) end, KeyValueList).

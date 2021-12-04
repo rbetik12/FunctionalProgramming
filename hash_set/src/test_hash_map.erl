@@ -46,3 +46,16 @@ without_test() ->
   ?assert(hash_map:get(keke, WithoutHashMap) == {notfound, false}),
   ?assert(hash_map:get(lol, WithoutHashMap) == {ok, 4}).
 
+get_key_value_list_test() ->
+  ListForHashMap = [{kek, 2}, {lol, 4}, {abc, 5}, {false, 57}],
+  HashMap = hash_map:from_key_value_list(ListForHashMap),
+  SortedActualList = lists:keysort(1, hash_map:get_key_value_list(HashMap)),
+  SortedExpectedList = lists:keysort(1, ListForHashMap),
+  ?assert(SortedActualList == SortedExpectedList).
+
+get_value_list_test() ->
+  HashMap = hash_map:from_key_value_list([{kek, 2}, {lol, 4}, {abc, 5}, {false, 57}]),
+  SortedActualList = lists:sort(hash_map:get_value_list(HashMap)),
+  SortedExpectedList = [2, 4, 5, 57],
+  ?assert(SortedActualList == SortedExpectedList).
+
