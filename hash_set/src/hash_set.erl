@@ -18,71 +18,70 @@
   subtract/2
 ]).
 
--record(hash_set, {list, hash_map}).
+-record(hash_set, {hash_map}).
 
-new() -> #hash_set{list = [], hash_map = hash_map:new()}.
+new() -> #hash_set{hash_map = hash_map:new()}.
 
 from_list(ListOfValues) ->
   lists:foldl(
-    fun (Value, HashSet) ->
+    fun(Value, HashSet) ->
       hash_set:put(Value, HashSet)
     end,
     hash_set:new(),
     ListOfValues
   ).
 
-compare(#hash_set{list = _, hash_map = _} = HashSet1, #hash_set{list = _, hash_map = _} = HashSet2) ->
+compare(#hash_set{hash_map = _} = HashSet1, #hash_set{hash_map = _} = HashSet2) ->
   lists:sort(hash_set:get_list(HashSet1)) == lists:sort(hash_set:get_list(HashSet2)).
 
-put(Element, #hash_set{list = List, hash_map = HashMap} = HashSet) ->
+put(Element, #hash_set{hash_map = HashMap} = HashSet) ->
   case hash_map:find(Element, HashMap) of
-    false -> #hash_set{list = List ++ [Element], hash_map = hash_map:append(Element, Element, HashMap)};
+    false -> #hash_set{hash_map = hash_map:append(Element, Element, HashMap)};
     _ -> HashSet
   end.
 
-remove(Element, #hash_set{list = List, hash_map = HashMap} = HashSet) ->
+remove(Element, #hash_set{hash_map = HashMap} = HashSet) ->
   case hash_map:find(Element, HashMap) of
     none -> HashSet;
-    _ -> #hash_set{list = lists:delete(Element, List), hash_map = hash_map:remove(Element, HashMap)}
+    _ -> #hash_set{hash_map = hash_map:remove(Element, HashMap)}
   end.
 
-print(#hash_set{list = List, hash_map = _}) -> io:format("~p~n", [List]).
+print(#hash_set{hash_map = HashMap}) -> io:format("~p~n", [hash_map:get_value_list(HashMap)]).
 
-get_list(#hash_set{list = List, hash_map = _}) -> List.
+get_list(#hash_set{hash_map = HashMap}) -> hash_map:get_value_list(HashMap).
 
-filter(Function, #hash_set{list = List, hash_map = HashMap}) ->
-  FilteredList = [X || X <- List, Function(X)],
-  DiffList = lists:subtract(List, FilteredList),
-  #hash_set{list = FilteredList, hash_map = hash_map:without(DiffList, HashMap)}.
+filter(Function, #hash_set{hash_map = HashMap}) ->
+  ValueList = hash_map:get_value_list(HashMap),
+  FilteredList = [X || X <- ValueList, Function(X)],
+  DiffList = lists:subtract(ValueList, FilteredList),
+  #hash_set{hash_map = hash_map:without(DiffList, HashMap)}.
 
-clear_dup(OldList, ClearedList, HashMap) ->
-  case length(OldList) of
-    0 -> #hash_set{list = ClearedList, hash_map = HashMap};
-    _ ->
-      Element = lists:nth(1, OldList),
-      case hash_map:get(Element, HashMap) of
-        false -> clear_dup(OldList -- [Element], ClearedList ++ [Element], hash_map:append(Element, Element, HashMap));
-        _ -> clear_dup(OldList -- [Element], ClearedList, HashMap)
-      end
-  end.
+fill_hash_map(ValuesList) ->
+  lists:foldl(
+    fun(Item, HashMap) ->
+      hash_map:append(Item, Item, HashMap)
+    end,
+    hash_map:new(),
+    ValuesList
+  ).
 
-map(Function, #hash_set{list = List, hash_map = _}) ->
-  MappedList = lists:map(Function, List),
-  clear_dup(MappedList, [], hash_map:new()).
+map(Function, #hash_set{hash_map = HashMap}) ->
+  MappedList = lists:map(Function, hash_map:get_value_list(HashMap)),
+  #hash_set{hash_map = fill_hash_map(MappedList)}.
 
-foldl(Function, Acc, #hash_set{list = List, hash_map = _}) -> lists:foldl(Function, Acc, List).
+foldl(Function, Acc, #hash_set{hash_map = HashMap}) -> lists:foldl(Function, Acc, hash_map:get_value_list(HashMap)).
 
-foldr(Function, Acc, #hash_set{list = List, hash_map = _}) -> lists:foldr(Function, Acc, List).
+foldr(Function, Acc, #hash_set{hash_map = HashMap}) -> lists:foldr(Function, Acc, hash_map:get_value_list(HashMap)).
 
 %% monoid functions %%
 
-add(#hash_set{list = List1, hash_map = _}, #hash_set{list = List2, hash_map = _}) ->
-  MergedList = List1 ++ List2,
-  clear_dup(MergedList, [], hash_map:new()).
+add(#hash_set{hash_map = HashMap1}, #hash_set{hash_map = HashMap2}) ->
+  MergedList = hash_map:get_value_list(HashMap1) ++ hash_map:get_value_list(HashMap2),
+  #hash_set{hash_map = fill_hash_map(MergedList)}.
 
-subtract(#hash_set{list = List1, hash_map = _}, #hash_set{list = List2, hash_map = _}) ->
-  SubtractedList = List1 -- List2,
-  clear_dup(SubtractedList, [], hash_map:new()).
+subtract(#hash_set{hash_map = HashMap1}, #hash_set{hash_map = HashMap2}) ->
+  SubtractedList = hash_map:get_value_list(HashMap1) -- hash_map:get_value_list(HashMap2),
+  #hash_set{hash_map = fill_hash_map(SubtractedList)}.
 
 
 
