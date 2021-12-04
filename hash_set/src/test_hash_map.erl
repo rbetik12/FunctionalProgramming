@@ -3,6 +3,13 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+expand_test() ->
+  HashMap = hash_map:from_key_value_list([{2, 3}, {false, 4}, {true, 5}]),
+  HashMap1 = hash_map:append_list([{key1, 3}, {key2, 3}, {key3, 10}], HashMap),
+  ?assert(hash_map:get(2, HashMap1) == {ok, 3}),
+  ?assert(hash_map:get(false, HashMap1) == {ok, 4}),
+  ?assert(hash_map:get(key3, HashMap1) == {ok, 10}).
+
 append_test() ->
   HashMap = hash_map:new(),
   AppendedHashMap = hash_map:append(1, 2, HashMap),

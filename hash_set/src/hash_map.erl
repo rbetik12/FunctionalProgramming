@@ -6,6 +6,7 @@
   new/0,
   new/1,
   append/3,
+  append_list/2,
   get/2,
   remove/2,
   from_key_value_list/1,
@@ -23,6 +24,12 @@ new() -> #hash_map{buckets = [[], [], [], []], buckets_amount = 4, hash_function
 
 new(HashFunction) -> #hash_map{buckets = [[], [], [], []], buckets_amount = 4, hash_function = HashFunction}.
 
+new(Buckets, BucketsAmount, HashFunction) -> #hash_map{
+  buckets = Buckets,
+  buckets_amount = BucketsAmount,
+  hash_function = HashFunction
+}.
+
 from_key_value_list(List) ->
   lists:foldl(
     fun(Item, HashMap) ->
@@ -32,20 +39,37 @@ from_key_value_list(List) ->
     List
   ).
 
+append_list(List, #hash_map{buckets = _, buckets_amount = _, hash_function = _} = HashMap) ->
+  lists:foldl(
+    fun(Item, HashMap) ->
+      append(element(1, Item), element(2, Item), HashMap)
+    end,
+    HashMap,
+    List
+  ).
+
 get(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction}) ->
-%%  io:format("~p~n", [[Buckets, BucketsAmount, HashFunction]]),
   Slot = HashFunction(Key, BucketsAmount) + 1,
   bucket_get(lists:nth(Slot, Buckets), Key).
 
-append(Key, Value, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction}) ->
-%%  io:format("~p~n", [[Buckets, BucketsAmount, HashFunction]]),
+append(Key, Value, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction} = HashMap) ->
   Slot = HashFunction(Key, BucketsAmount) + 1,
-  #hash_map{
-    buckets = lists:sublist(Buckets, Slot - 1) ++
+
+  Buckets1 = lists:sublist(Buckets, Slot - 1) ++
     [bucket_modify(lists:nth(Slot, Buckets), Key, Value)] ++
     lists:sublist(Buckets, Slot + 1, BucketsAmount - Slot + 1),
+
+  HashMap1 = #hash_map{
+    buckets = Buckets1,
     buckets_amount = BucketsAmount,
-    hash_function = HashFunction}.
+    hash_function = HashFunction},
+
+  ShouldExpand = should_expand(HashMap1),
+  case ShouldExpand of
+    true -> expand_hash_map(HashMap1);
+    false -> HashMap1
+  end.
+
 
 find(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction}) ->
   Slot = HashFunction(Key, BucketsAmount) + 1,
@@ -55,18 +79,50 @@ remove(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_fu
   Slot = HashFunction(Key, BucketsAmount) + 1,
   #hash_map{
     buckets = lists:sublist(Buckets, Slot - 1) ++
-    [bucket_modify(lists:nth(Slot, Buckets), Key)] ++
-    lists:sublist(Buckets, Slot + 1, BucketsAmount - Slot + 1),
+      [bucket_modify(lists:nth(Slot, Buckets), Key)] ++
+      lists:sublist(Buckets, Slot + 1, BucketsAmount - Slot + 1),
     buckets_amount = BucketsAmount, hash_function = HashFunction}.
 
 without(ListOfKeys, #hash_map{buckets = _} = HashMap) ->
   lists:foldl(
-    fun (Key, HashMap) ->
+    fun(Key, HashMap) ->
       remove(Key, HashMap)
     end,
     HashMap,
     ListOfKeys
   ).
+
+expand_hash_map(#hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction} = HashMap) ->
+  ExpandedBuckets = lists:foldl(fun(_, Acc) -> Acc ++ [Acc1 || Acc1 <- [[], []]] end, [], Buckets),
+  lists:foldl(
+    fun(Item, HashMap1) ->
+      append(element(1, Item), element(2, Item), HashMap1)
+    end,
+    new(ExpandedBuckets, BucketsAmount * 2, HashFunction),
+    get_key_value_list(HashMap)
+  ).
+
+should_expand(#hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = _}) ->
+  FilledBucketsAmount = lists:foldl(
+    fun(Bucket, Acc) ->
+      case bucket_empty(Bucket) of
+        false -> Acc + 1;
+        true -> Acc
+      end
+    end,
+    0,
+    Buckets
+  ),
+  case FilledBucketsAmount / BucketsAmount of Result
+    when Result >= 0.75 -> true;
+    _ -> false
+  end.
+
+bucket_empty(Bucket) ->
+  case length(Bucket) of
+    0 -> true;
+    _ -> false
+  end.
 
 bucket_modify(Bucket, Key, Value) ->
   case lists:keyfind(Key, 2, Bucket) of
@@ -110,4 +166,4 @@ get_key_value_list(#hash_map{buckets = Buckets, buckets_amount = _, hash_functio
 
 get_value_list(#hash_map{buckets = _, buckets_amount = _, hash_function = _} = HashMap) ->
   KeyValueList = get_key_value_list(HashMap),
-  lists:map(fun (KeyValueTuple) -> element(2, KeyValueTuple) end, KeyValueList).
+  lists:map(fun(KeyValueTuple) -> element(2, KeyValueTuple) end, KeyValueList).
