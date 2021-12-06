@@ -13,16 +13,18 @@ init([Delta]) ->
   {ok, Delta}.
 
 handle_call({{X1, X2}, Func}, _, Delta) ->
-  List = lists:seq(1, round((X2 - X1) / Delta)),
-  lists:foldl(
-    fun(_, Acc) ->
-      gen_server:call(output_generator, {Acc, Func(Acc)}),
-      Acc + Delta
+  List = lists:seq(1, abs(round((X2 - X1) / Delta))),
+  {_, InterpolatedPoints} = lists:foldl(
+    fun(_, {Acc, PointsList}) ->
+      X = Acc,
+      Y = Func(Acc),
+      gen_server:call(output_generator, {X, Y}),
+      {Acc + Delta, PointsList ++ [{X, Y}]}
     end,
-    X1,
+    {X1, []},
     List
   ),
-  {reply, ok, Delta};
+  {reply, InterpolatedPoints, Delta};
 
 handle_call(_, _, Delta) ->
   {reply, ok, Delta}.

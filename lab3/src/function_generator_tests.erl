@@ -6,6 +6,7 @@
 linear_function_generator_test() ->
   function_generator:start_link(linear),
   points_generator:start_link(0.25),
+  output_generator:start_link(test),
   gen_server:call(function_generator, {add_point, -2.5, 0.0}),
   gen_server:call(function_generator, {add_point, -1.0, 3.0}),
   gen_server:call(function_generator, {add_point, -0.0, 5.0}),

@@ -27,7 +27,7 @@ input_stream() ->
 start(Mode, Delta) ->
   function_generator:start_link(Mode),
   points_generator:start_link(Delta),
-  output_generator:start_link(),
+  output_generator:start_link(stdout),
   input_stream().
 
 stop(_State) ->
