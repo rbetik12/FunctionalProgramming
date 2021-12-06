@@ -21,12 +21,13 @@ input_stream() ->
     eof -> Status;
     _ ->
       gen_server:call(function_generator, {add_point, X, Y}),
-      io:format("Map: ~p~n", [gen_server:call(function_generator, {get_func_map})]),
       input_stream()
   end.
 
-start(Mode, Freq) ->
+start(Mode, Delta) ->
   function_generator:start_link(Mode),
+  points_generator:start_link(Delta),
+  output_generator:start_link(),
   input_stream().
 
 stop(_State) ->

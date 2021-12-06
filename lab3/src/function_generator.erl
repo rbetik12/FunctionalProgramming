@@ -19,7 +19,7 @@ handle_call({add_point, X, Y}, _, #generator_state{generator_type = Type, points
         ok,
         #generator_state{
           generator_type = linear,
-          points_list = [{X, Y}],
+          points_list = [lists:nth(2, PointList), {X, Y}],
           func_map = generate_function(Type, PointList, FuncMap)}};
     _ ->
       {reply,
@@ -33,7 +33,7 @@ handle_call({add_point, X, Y}, _, #generator_state{generator_type = Type, points
 handle_call({get_func_map}, _, #generator_state{generator_type = _, points_list = _, func_map = FuncMap} = State) ->
   {reply, FuncMap, State};
 
-handle_call(Request, From, State) ->
+handle_call(Request, _, State) ->
   io:format("H: ~p~n", [Request]),
   {reply, ok, State}.
 
@@ -42,4 +42,6 @@ generate_function(linear, PointsList, FuncMap) ->
   {X2, Y2} = lists:nth(2, PointsList),
   A1 = (Y2 - Y1) / (X2 - X1),
   A0 = Y1 - A1 * X1,
-  maps:put({X1, X2}, {linear, A0, A1}, FuncMap).
+  Func = fun (X) -> A0 + A1 * X end,
+  gen_server:call(points_generator, {{X1, X2}, Func}),
+  maps:put({X1, X2}, Func, FuncMap).
