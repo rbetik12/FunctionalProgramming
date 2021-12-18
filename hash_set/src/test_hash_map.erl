@@ -72,3 +72,8 @@ empty_hash_map_test() ->
   ?assert(hash_map:get_value_list(HashMap) == []),
   ?assert(hash_map:get_value_list(HashMap1) == []).
 
+get_key_list_test() ->
+  HashMap = hash_map:from_key_value_list([{kek, 2}, {lol, 4}, {abc, 5}, {false, 57}]),
+  SortedActualList = lists:sort(hash_map:get_key_list(HashMap)),
+  SortedExpectedList = lists:sort([kek, lol, abc, false]),
+  ?assert(SortedActualList == SortedExpectedList).

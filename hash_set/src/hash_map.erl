@@ -14,7 +14,8 @@
   find/2,
   without/2,
   get_key_value_list/1,
-  get_value_list/1
+  get_value_list/1,
+  get_key_list/1
 ]).
 
 -record(hash_map, {buckets, buckets_amount, hash_function}).
@@ -152,3 +153,7 @@ get_key_value_list(#hash_map{buckets = Buckets}) ->
 get_value_list(#hash_map{} = HashMap) ->
   KeyValueList = get_key_value_list(HashMap),
   lists:map(fun(KeyValueTuple) -> element(2, KeyValueTuple) end, KeyValueList).
+
+get_key_list(#hash_map{} = HashMap) ->
+  KeyValueList = get_key_value_list(HashMap),
+  lists:map(fun(KeyValueTuple) -> element(1, KeyValueTuple) end, KeyValueList).
