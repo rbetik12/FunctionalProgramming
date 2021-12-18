@@ -15,10 +15,11 @@
   without/2,
   get_key_value_list/1,
   get_value_list/1,
-  get_key_list/1
+  get_key_list/1,
+  size/1
 ]).
 
--record(hash_map, {buckets, buckets_amount, hash_function}).
+-record(hash_map, {size = 0, buckets, buckets_amount, hash_function}).
 -record(hash_map_entry, {key, value}).
 
 new() -> #hash_map{buckets = [[], [], [], []], buckets_amount = 4, hash_function = fun erlang:phash2/2}.
@@ -49,11 +50,11 @@ append_list(List, #hash_map{} = HashMap) ->
     List
   ).
 
-get(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction}) ->
+get(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, size = Size, hash_function = HashFunction}) ->
   Slot = HashFunction(Key, BucketsAmount) + 1,
   bucket_get(lists:nth(Slot, Buckets), Key).
 
-append(Key, Value, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction}) ->
+append(Key, Value, #hash_map{size = Size, buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction}) ->
   Slot = HashFunction(Key, BucketsAmount) + 1,
 
   Buckets1 = lists:sublist(Buckets, Slot - 1) ++
@@ -61,6 +62,7 @@ append(Key, Value, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, 
     lists:sublist(Buckets, Slot + 1, BucketsAmount - Slot + 1),
 
   HashMap1 = #hash_map{
+    size = Size + 1,
     buckets = Buckets1,
     buckets_amount = BucketsAmount,
     hash_function = HashFunction},
@@ -76,13 +78,18 @@ find(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_func
   Slot = HashFunction(Key, BucketsAmount) + 1,
   bucket_find(lists:nth(Slot, Buckets), Key).
 
-remove(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction}) ->
-  Slot = HashFunction(Key, BucketsAmount) + 1,
-  #hash_map{
-    buckets = lists:sublist(Buckets, Slot - 1) ++
-      [bucket_modify(lists:nth(Slot, Buckets), Key)] ++
-      lists:sublist(Buckets, Slot + 1, BucketsAmount - Slot + 1),
-    buckets_amount = BucketsAmount, hash_function = HashFunction}.
+remove(Key, #hash_map{size = Size, buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction} = HashMap) ->
+  case Size == 0 of
+    true -> HashMap;
+    _ ->
+      Slot = HashFunction(Key, BucketsAmount) + 1,
+      #hash_map{
+        size = Size - 1,
+        buckets = lists:sublist(Buckets, Slot - 1) ++
+          [bucket_modify(lists:nth(Slot, Buckets), Key)] ++
+          lists:sublist(Buckets, Slot + 1, BucketsAmount - Slot + 1),
+        buckets_amount = BucketsAmount, hash_function = HashFunction}
+  end.
 
 without(ListOfKeys, #hash_map{} = HashMap) ->
   lists:foldl(
@@ -157,3 +164,5 @@ get_value_list(#hash_map{} = HashMap) ->
 get_key_list(#hash_map{} = HashMap) ->
   KeyValueList = get_key_value_list(HashMap),
   lists:map(fun(KeyValueTuple) -> element(1, KeyValueTuple) end, KeyValueList).
+
+size(#hash_map{size = Size}) -> Size.

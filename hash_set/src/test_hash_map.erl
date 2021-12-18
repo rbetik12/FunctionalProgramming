@@ -77,3 +77,19 @@ get_key_list_test() ->
   SortedActualList = lists:sort(hash_map:get_key_list(HashMap)),
   SortedExpectedList = lists:sort([kek, lol, abc, false]),
   ?assert(SortedActualList == SortedExpectedList).
+
+size_simple_test() ->
+  HashMap = hash_map:from_key_value_list([{kek, 2}, {lol, 4}, {abc, 5}, {false, 57}]),
+  ?assert(hash_map:size(HashMap) == 4).
+
+size_append_remove_test() ->
+  HashMap = hash_map:from_key_value_list([{kek, 2}, {lol, 4}, {abc, 5}, {false, 57}]),
+  HashMapRemoved = hash_map:remove(kek, HashMap),
+  ?assert(hash_map:size(HashMap) == 4),
+  ?assert(hash_map:size(HashMapRemoved) == 3).
+
+size_expanded_hash_map_test() ->
+  HashMap = hash_map:from_key_value_list([{2, 3}, {false, 4}, {true, 5}]),
+  HashMap1 = hash_map:append_list([{key1, 3}, {key2, 3}, {key3, 10}, {key4, 10}, {key5, 10}], HashMap),
+  ?assert(hash_map:size(HashMap) == 3),
+  ?assert(hash_map:size(HashMap1) == 8).
