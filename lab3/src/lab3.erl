@@ -5,30 +5,27 @@
 -export([start/2, stop/1]).
 
 get_x_y() ->
-  Line = io:get_line("Enter new x y:"),
+  Line = io:get_line(""),
   case Line of
-    eof -> {eof, {0.0, 0.0}};
-    _ -> StrippedLine = string:strip(string:strip(Line, both, 13), both, 10),
-
-      {ok, [X, Y], _} = io_lib:fread("~f~f", StrippedLine),
-      {ok, {X, Y}}
+    eof -> eof;
+    _ ->
+      StrippedLine = string:strip(string:strip(Line, both, 13), both, 10),
+      {_, [X, Y], _} = io_lib:fread("~f~f", StrippedLine),
+      {X, Y}
   end.
 
-input_stream() ->
-  {Status, {X, Y}} = get_x_y(),
-  io:format("~p~n", [Status]),
-  case Status of
-    eof -> Status;
-    _ ->
-      gen_server:call(function_generator, {add_point, X, Y}),
-      input_stream()
+input_stream(FuncGenPid) ->
+  case get_x_y() of
+    eof -> eof;
+    {X, Y} ->
+      function_generator:send_message(FuncGenPid, {add_point, X, Y}),
+      input_stream(FuncGenPid)
   end.
 
 start(Mode, Delta) ->
-  function_generator:start_link(Mode),
-  points_generator:start_link(Delta),
-  output_generator:start_link(stdout),
-  input_stream().
+  { _, OutputGenPid } = output_generator:start_link(stdout),
+  { _, PointsGenPid } = points_generator:start_link(Delta, OutputGenPid),
+  { _, FuncGenPid } = function_generator:start_link(Mode, PointsGenPid),
+  input_stream(FuncGenPid).
 
-stop(_State) ->
-  ok.
+stop(_State) -> ok.
