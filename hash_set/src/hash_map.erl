@@ -21,7 +21,8 @@
   filter/2,
   foldl/3,
   foldr/3,
-  concat/2
+  concat/2,
+  subtract/2
 ]).
 
 -record(hash_map, {size = 0, buckets, buckets_amount, hash_function}).
@@ -192,10 +193,19 @@ concat(#hash_map{size = Size1} = HashMap1, #hash_map{size = Size2} = HashMap2) -
     _ -> concat_to(HashMap2, HashMap1)
   end.
 
+subtract(#hash_map{} = HashMap1, #hash_map{} = HashMap2) ->
+  KeyList = get_key_list(HashMap2),
+  lists:foldl(
+    fun(Key, HashMap) ->
+      hash_map:remove(Key, HashMap)
+    end,
+    HashMap1,
+    KeyList).
+
 concat_to(#hash_map{} = HashMapDest, #hash_map{} = HashMapSrc) ->
   KeyValueList = hash_map:get_key_value_list(HashMapSrc),
   lists:foldl(
-    fun (KeyValuePair, HashMap) ->
+    fun(KeyValuePair, HashMap) ->
       hash_map:append(element(1, KeyValuePair), element(2, KeyValuePair), HashMap)
     end,
     HashMapDest,

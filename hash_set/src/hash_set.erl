@@ -66,8 +66,7 @@ add(#hash_set{hash_map = HashMap1}, #hash_set{hash_map = HashMap2}) ->
   #hash_set{hash_map = hash_map:concat(HashMap1, HashMap2)}.
 
 subtract(#hash_set{hash_map = HashMap1}, #hash_set{hash_map = HashMap2}) ->
-  SubtractedList = hash_map:get_value_list(HashMap1) -- hash_map:get_value_list(HashMap2),
-  #hash_set{hash_map = fill_hash_map(SubtractedList)}.
+  #hash_set{hash_map = hash_map:subtract(HashMap1, HashMap2)}.
 
 
 

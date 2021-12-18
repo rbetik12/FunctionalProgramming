@@ -151,3 +151,12 @@ concat_same_test() ->
   ActualHashMap = hash_map:concat(HashMap1, HashMap1),
   ?assert(hash_map:compare(ExpectedHashMap, ActualHashMap) == true),
   ?assert(hash_map:size(ActualHashMap) == 3).
+
+subtract_test() ->
+  KeyValueList1 = [{key1, 2}, {key2, 4}, {key3, 5}],
+  KeyValueList2 = [{key3, 2}, {key5, 4}, {key6, 5}],
+  HashMap1 = hash_map:from_key_value_list(KeyValueList1),
+  HashMap2 = hash_map:from_key_value_list(KeyValueList2),
+  ExpectedHashMap = hash_map:from_key_value_list([{key1, 2}, {key2, 4}]),
+  ActualHashMap = hash_map:subtract(HashMap1, HashMap2),
+  ?assert(hash_map:compare(ExpectedHashMap, ActualHashMap)).
