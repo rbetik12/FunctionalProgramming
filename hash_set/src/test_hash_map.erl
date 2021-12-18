@@ -93,3 +93,22 @@ size_expanded_hash_map_test() ->
   HashMap1 = hash_map:append_list([{key1, 3}, {key2, 3}, {key3, 10}, {key4, 10}, {key5, 10}], HashMap),
   ?assert(hash_map:size(HashMap) == 3),
   ?assert(hash_map:size(HashMap1) == 8).
+
+compare_with_same_keys_test() ->
+  HashMap = hash_map:from_key_value_list([{key1, 3}, {key2, 4}, {key3, 5}]),
+  HashMapNotEqual = hash_map:from_key_value_list([{key1, 4}, {key2, 5}, {key3, 6}]),
+  ?assert(hash_map:compare(HashMap, HashMapNotEqual) == false),
+  ?assert(hash_map:compare(HashMap, HashMap) == true).
+
+compare_with_different_keys_test() ->
+  HashMap = hash_map:from_key_value_list([{key1, 3}, {key2, 4}, {key3, 5}]),
+  HashMapNotEqual = hash_map:from_key_value_list([{key4, 4}, {key5, 5}, {key6, 6}]),
+  ?assert(hash_map:compare(HashMap, HashMapNotEqual) == false).
+
+compare_with_same_keys_but_different_size_test() ->
+  HashMap = hash_map:from_key_value_list([{key1, 3}, {key2, 4}]),
+  HashMapNotEqual = hash_map:from_key_value_list([{key1, 4}, {key2, 5}, {key3, 6}]),
+  ?assert(hash_map:compare(HashMap, HashMapNotEqual) == false),
+  ?assert(hash_map:compare(HashMapNotEqual, HashMap) == false).
+
+

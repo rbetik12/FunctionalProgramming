@@ -16,7 +16,8 @@
   get_key_value_list/1,
   get_value_list/1,
   get_key_list/1,
-  size/1
+  size/1,
+  compare/2
 ]).
 
 -record(hash_map, {size = 0, buckets, buckets_amount, hash_function}).
@@ -50,7 +51,7 @@ append_list(List, #hash_map{} = HashMap) ->
     List
   ).
 
-get(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, size = Size, hash_function = HashFunction}) ->
+get(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction}) ->
   Slot = HashFunction(Key, BucketsAmount) + 1,
   bucket_get(lists:nth(Slot, Buckets), Key).
 
@@ -166,3 +167,15 @@ get_key_list(#hash_map{} = HashMap) ->
   lists:map(fun(KeyValueTuple) -> element(1, KeyValueTuple) end, KeyValueList).
 
 size(#hash_map{size = Size}) -> Size.
+
+compare(#hash_map{size = Size1} = HashMap1, #hash_map{size = Size2} = HashMap2) ->
+  case Size1 == Size2 of
+    true ->
+      KeyList1 = get_key_list(HashMap1),
+      lists:all(
+        fun (Item) ->
+          get(Item, HashMap2) == get(Item, HashMap1)
+        end,
+        KeyList1);
+    _ -> false
+  end.
