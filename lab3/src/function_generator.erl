@@ -12,26 +12,30 @@ start_link(GeneratorType, PointsGenPid) ->
 init([GeneratorType, PointsGenPid]) ->
   {ok, #generator_state{generator_type = GeneratorType, points_gen_pid = PointsGenPid}}.
 
-handle_cast({add_point, X, Y},
+handle_cast(
+    {add_point, X, Y},
     #generator_state{generator_type = linear,
                       points_gen_pid = Pid,
                       points_list = PointList,
                       func_map = FuncMap}) ->
-  case length(PointList) of
-    2 ->
-      {noreply,
-        #generator_state{
-          generator_type = linear,
-          points_list = [lists:nth(2, PointList), {X, Y}],
-          func_map = generate_function(linear, PointList, FuncMap, Pid),
-          points_gen_pid = Pid}};
-    _ ->
-      {noreply,
-        #generator_state{
-          generator_type = linear,
-          points_list = lists:append(PointList, [{X, Y}]),
-          func_map = FuncMap,
-          points_gen_pid = Pid}}
+  PointList1 = lists:append(PointList, [{X, Y}]),
+  case length(PointList1) of
+    2 -> {
+      noreply,
+      #generator_state{
+        generator_type = linear,
+        points_list = [lists:nth(2, PointList1)],
+        func_map = generate_function(linear, PointList1, FuncMap, Pid),
+        points_gen_pid = Pid}
+    };
+    _ -> {
+      noreply,
+      #generator_state{
+        generator_type = linear,
+        points_list = PointList1,
+        func_map = FuncMap,
+        points_gen_pid = Pid}
+    }
   end;
 
 handle_cast({get_func_map}, #generator_state{func_map = FuncMap} = State) -> {reply, FuncMap, State}.
