@@ -17,7 +17,8 @@
   get_value_list/1,
   get_key_list/1,
   size/1,
-  compare/2
+  compare/2,
+  filter/2
 ]).
 
 -record(hash_map, {size = 0, buckets, buckets_amount, hash_function}).
@@ -179,3 +180,17 @@ compare(#hash_map{size = Size1} = HashMap1, #hash_map{size = Size2} = HashMap2) 
         KeyList1);
     _ -> false
   end.
+
+filter(Pred, #hash_map{} = HashMap1) ->
+  KeyValueList = get_key_value_list(HashMap1),
+  lists:foldl(
+    fun (KeyValuePair, FilteredHashMap) ->
+      case Pred(element(2, KeyValuePair)) of
+        true -> FilteredHashMap;
+        false ->
+          remove(element(1, KeyValuePair), FilteredHashMap)
+      end
+    end,
+    HashMap1,
+    KeyValueList
+  ).

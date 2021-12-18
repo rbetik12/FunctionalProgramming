@@ -111,4 +111,11 @@ compare_with_same_keys_but_different_size_test() ->
   ?assert(hash_map:compare(HashMap, HashMapNotEqual) == false),
   ?assert(hash_map:compare(HashMapNotEqual, HashMap) == false).
 
-
+filter_test() ->
+  HashMap = hash_map:from_key_value_list([{key1, 2}, {key2, 4}, {key3, 5}]),
+  FilteredHashMap = hash_map:filter(fun (Item) -> Item rem 2 =/= 0 end, HashMap),
+  FilteredHashMap1 = hash_map:filter(fun (Item) -> Item rem 2 == 0 end, HashMap),
+  ?assert(hash_map:size(FilteredHashMap) == 1),
+  ?assert(hash_map:get_value_list(FilteredHashMap) == [5]),
+  ?assert(hash_map:size(FilteredHashMap1) == 2),
+  ?assert(hash_map:get_value_list(FilteredHashMap1) == [2, 4]).
