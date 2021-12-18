@@ -18,7 +18,9 @@
   get_key_list/1,
   size/1,
   compare/2,
-  filter/2
+  filter/2,
+  foldl/3,
+  foldr/3
 ]).
 
 -record(hash_map, {size = 0, buckets, buckets_amount, hash_function}).
@@ -193,4 +195,40 @@ filter(Pred, #hash_map{} = HashMap1) ->
     end,
     HashMap1,
     KeyValueList
+  ).
+
+bucket_foldl(Func, Acc, Bucket) ->
+  lists:foldl(
+    fun (Item, FoldAcc) ->
+      Func(element(3, Item), FoldAcc)
+    end,
+    Acc,
+    Bucket
+  ).
+
+bucket_foldr(Func, Acc, Bucket) ->
+  lists:foldr(
+    fun (Item, FoldAcc) ->
+      Func(element(3, Item), FoldAcc)
+    end,
+    Acc,
+    Bucket
+  ).
+
+foldl(Func, Acc, #hash_map{buckets = Buckets}) ->
+  lists:foldl(
+    fun (Bucket, FoldAcc) ->
+      bucket_foldl(Func, FoldAcc, Bucket)
+    end,
+    Acc,
+    Buckets
+  ).
+
+foldr(Func, Acc, #hash_map{buckets = Buckets}) ->
+  lists:foldr(
+    fun (Bucket, FoldAcc) ->
+      bucket_foldr(Func, FoldAcc, Bucket)
+    end,
+    Acc,
+    Buckets
   ).

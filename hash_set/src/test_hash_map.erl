@@ -119,3 +119,17 @@ filter_test() ->
   ?assert(hash_map:get_value_list(FilteredHashMap) == [5]),
   ?assert(hash_map:size(FilteredHashMap1) == 2),
   ?assert(hash_map:get_value_list(FilteredHashMap1) == [2, 4]).
+
+foldl_test() ->
+  HashMap = hash_map:from_key_value_list([{key1, 2}, {key2, 4}, {key3, 5}]),
+  Sum = hash_map:foldl(fun (Item, Sum) -> Sum + Item end, 0, HashMap),
+  Prod = hash_map:foldl(fun (Item, Sum) -> Sum * Item end, 1, HashMap),
+  ?assert(Sum == 11),
+  ?assert(Prod == 40).
+
+foldr_test() ->
+  HashMap = hash_map:from_key_value_list([{key1, 2}, {key2, 4}, {key3, 5}]),
+  Sum = hash_map:foldr(fun (Item, Sum) -> Sum + Item end, 0, HashMap),
+  Prod = hash_map:foldr(fun (Item, Sum) -> Sum * Item end, 1, HashMap),
+  ?assert(Sum == 11),
+  ?assert(Prod == 40).
