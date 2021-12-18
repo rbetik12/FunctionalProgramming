@@ -41,11 +41,7 @@ print(#hash_set{hash_map = HashMap}) -> io:format("~p~n", [hash_map:get_value_li
 
 get_list(#hash_set{hash_map = HashMap}) -> hash_map:get_value_list(HashMap).
 
-filter(Function, #hash_set{hash_map = HashMap}) ->
-  ValueList = hash_map:get_value_list(HashMap),
-  FilteredList = [X || X <- ValueList, Function(X)],
-  DiffList = lists:subtract(ValueList, FilteredList),
-  #hash_set{hash_map = hash_map:without(DiffList, HashMap)}.
+filter(Function, #hash_set{hash_map = HashMap}) -> #hash_set{hash_map = hash_map:filter(Function, HashMap)}.
 
 fill_hash_map(ValuesList) ->
   lists:foldl(
@@ -60,15 +56,14 @@ map(Function, #hash_set{hash_map = HashMap}) ->
   MappedList = lists:map(Function, hash_map:get_value_list(HashMap)),
   #hash_set{hash_map = fill_hash_map(MappedList)}.
 
-foldl(Function, Acc, #hash_set{hash_map = HashMap}) -> lists:foldl(Function, Acc, hash_map:get_value_list(HashMap)).
+foldl(Function, Acc, #hash_set{hash_map = HashMap}) -> hash_map:foldl(Function, Acc, HashMap).
 
-foldr(Function, Acc, #hash_set{hash_map = HashMap}) -> lists:foldr(Function, Acc, hash_map:get_value_list(HashMap)).
+foldr(Function, Acc, #hash_set{hash_map = HashMap}) -> hash_map:foldr(Function, Acc, HashMap).
 
 %% monoid functions %%
 
 add(#hash_set{hash_map = HashMap1}, #hash_set{hash_map = HashMap2}) ->
-  MergedList = hash_map:get_value_list(HashMap1) ++ hash_map:get_value_list(HashMap2),
-  #hash_set{hash_map = fill_hash_map(MergedList)}.
+  #hash_set{hash_map = hash_map:concat(HashMap1, HashMap2)}.
 
 subtract(#hash_set{hash_map = HashMap1}, #hash_set{hash_map = HashMap2}) ->
   SubtractedList = hash_map:get_value_list(HashMap1) -- hash_map:get_value_list(HashMap2),
