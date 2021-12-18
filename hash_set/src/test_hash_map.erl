@@ -27,7 +27,7 @@ remove_test() ->
 change_element_test() ->
   HashMap = hash_map:from_key_value_list([{kek, 2}]),
   ModifiedHashMap = hash_map:append(kek, 5, HashMap),
-  ?assert(hash_map:get(kek, ModifiedHashMap) == {ok, 5}).
+  ?assert(hash_map:get(kek, ModifiedHashMap) == {ok, 2}).
 
 append_with_collision_test() ->
   HashMap = hash_map:from_key_value_list_with_hash([{kek, 2}, {lol, 5}], fun custom_hash_function/2),
@@ -133,3 +133,21 @@ foldr_test() ->
   Prod = hash_map:foldr(fun (Item, Sum) -> Sum * Item end, 1, HashMap),
   ?assert(Sum == 11),
   ?assert(Prod == 40).
+
+concat_test() ->
+  KeyValueList1 = [{key1, 2}, {key2, 4}, {key3, 5}],
+  KeyValueList2 = [{key4, 2}, {key5, 4}, {key6, 5}],
+  HashMap1 = hash_map:from_key_value_list(KeyValueList1),
+  HashMap2 = hash_map:from_key_value_list(KeyValueList2),
+  ExpectedHashMap = hash_map:from_key_value_list(KeyValueList1 ++ KeyValueList2),
+  ActualHashMap = hash_map:concat(HashMap1, HashMap2),
+  ?assert(hash_map:compare(ExpectedHashMap, ActualHashMap) == true),
+  ?assert(hash_map:size(ActualHashMap) == 6).
+
+concat_same_test() ->
+  KeyValueList1 = [{key1, 2}, {key2, 4}, {key3, 5}],
+  HashMap1 = hash_map:from_key_value_list(KeyValueList1),
+  ExpectedHashMap = hash_map:from_key_value_list(KeyValueList1),
+  ActualHashMap = hash_map:concat(HashMap1, HashMap1),
+  ?assert(hash_map:compare(ExpectedHashMap, ActualHashMap) == true),
+  ?assert(hash_map:size(ActualHashMap) == 3).

@@ -31,20 +31,11 @@ from_list(ListOfValues) ->
     ListOfValues
   ).
 
-compare(#hash_set{hash_map = _} = HashSet1, #hash_set{hash_map = _} = HashSet2) ->
-  lists:sort(hash_set:get_list(HashSet1)) == lists:sort(hash_set:get_list(HashSet2)).
+compare(#hash_set{hash_map = HashMap1}, #hash_set{hash_map = HashMap2}) -> hash_map:compare(HashMap1, HashMap2).
 
-put(Element, #hash_set{hash_map = HashMap} = HashSet) ->
-  case hash_map:find(Element, HashMap) of
-    false -> #hash_set{hash_map = hash_map:append(Element, Element, HashMap)};
-    _ -> HashSet
-  end.
+put(Element, #hash_set{hash_map = HashMap}) -> #hash_set{hash_map = hash_map:append(Element, Element, HashMap)}.
 
-remove(Element, #hash_set{hash_map = HashMap} = HashSet) ->
-  case hash_map:find(Element, HashMap) of
-    none -> HashSet;
-    _ -> #hash_set{hash_map = hash_map:remove(Element, HashMap)}
-  end.
+remove(Element, #hash_set{hash_map = HashMap}) -> #hash_set{hash_map = hash_map:remove(Element, HashMap)}.
 
 print(#hash_set{hash_map = HashMap}) -> io:format("~p~n", [hash_map:get_value_list(HashMap)]).
 

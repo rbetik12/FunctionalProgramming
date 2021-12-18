@@ -20,7 +20,8 @@
   compare/2,
   filter/2,
   foldl/3,
-  foldr/3
+  foldr/3,
+  concat/2
 ]).
 
 -record(hash_map, {size = 0, buckets, buckets_amount, hash_function}).
@@ -58,23 +59,27 @@ get(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_funct
   Slot = HashFunction(Key, BucketsAmount) + 1,
   bucket_get(lists:nth(Slot, Buckets), Key).
 
-append(Key, Value, #hash_map{size = Size, buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction}) ->
-  Slot = HashFunction(Key, BucketsAmount) + 1,
+append(Key, Value, #hash_map{size = Size, buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction} = HashMap) ->
+  case find(Key, HashMap) of
+    true -> HashMap;
+    _ ->
+      Slot = HashFunction(Key, BucketsAmount) + 1,
 
-  Buckets1 = lists:sublist(Buckets, Slot - 1) ++
-    [bucket_modify(lists:nth(Slot, Buckets), Key, Value)] ++
-    lists:sublist(Buckets, Slot + 1, BucketsAmount - Slot + 1),
+      Buckets1 = lists:sublist(Buckets, Slot - 1) ++
+        [bucket_modify(lists:nth(Slot, Buckets), Key, Value)] ++
+        lists:sublist(Buckets, Slot + 1, BucketsAmount - Slot + 1),
 
-  HashMap1 = #hash_map{
-    size = Size + 1,
-    buckets = Buckets1,
-    buckets_amount = BucketsAmount,
-    hash_function = HashFunction},
+      HashMap1 = #hash_map{
+        size = Size + 1,
+        buckets = Buckets1,
+        buckets_amount = BucketsAmount,
+        hash_function = HashFunction},
 
-  ShouldExpand = should_expand(lists:nth(Slot, Buckets), BucketsAmount),
-  case ShouldExpand of
-    true -> expand_hash_map(HashMap1);
-    false -> HashMap1
+      ShouldExpand = should_expand(lists:nth(Slot, Buckets), BucketsAmount),
+      case ShouldExpand of
+        true -> expand_hash_map(HashMap1);
+        false -> HashMap1
+      end
   end.
 
 
@@ -83,16 +88,20 @@ find(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_func
   bucket_find(lists:nth(Slot, Buckets), Key).
 
 remove(Key, #hash_map{size = Size, buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction} = HashMap) ->
-  case Size == 0 of
-    true -> HashMap;
-    _ ->
-      Slot = HashFunction(Key, BucketsAmount) + 1,
-      #hash_map{
-        size = Size - 1,
-        buckets = lists:sublist(Buckets, Slot - 1) ++
-          [bucket_modify(lists:nth(Slot, Buckets), Key)] ++
-          lists:sublist(Buckets, Slot + 1, BucketsAmount - Slot + 1),
-        buckets_amount = BucketsAmount, hash_function = HashFunction}
+  case find(Key, HashMap) of
+    true ->
+      case Size == 0 of
+        true -> HashMap;
+        _ ->
+          Slot = HashFunction(Key, BucketsAmount) + 1,
+          #hash_map{
+            size = Size - 1,
+            buckets = lists:sublist(Buckets, Slot - 1) ++
+              [bucket_modify(lists:nth(Slot, Buckets), Key)] ++
+              lists:sublist(Buckets, Slot + 1, BucketsAmount - Slot + 1),
+            buckets_amount = BucketsAmount, hash_function = HashFunction}
+      end;
+    _ -> HashMap
   end.
 
 without(ListOfKeys, #hash_map{} = HashMap) ->
@@ -103,44 +112,6 @@ without(ListOfKeys, #hash_map{} = HashMap) ->
     HashMap,
     ListOfKeys
   ).
-
-expand_hash_map(#hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction} = HashMap) ->
-  ExpandedBuckets = lists:foldl(fun(_, Acc) -> Acc ++ [Acc1 || Acc1 <- [[], []]] end, [], Buckets),
-  lists:foldl(
-    fun(Item, HashMap1) ->
-      append(element(1, Item), element(2, Item), HashMap1)
-    end,
-    new(ExpandedBuckets, BucketsAmount * 2, HashFunction),
-    get_key_value_list(HashMap)
-  ).
-
-should_expand(Bucket, BucketsAmount) ->
-  BucketPairsAmount = length(Bucket),
-  case BucketPairsAmount of Amount
-  when Amount / BucketsAmount >= 0.75 -> true;
-    _ -> false
-  end.
-
-bucket_modify(Bucket, Key, Value) ->
-  case lists:keyfind(Key, 2, Bucket) of
-    false -> lists:append(Bucket, [#hash_map_entry{key = Key, value = Value}]);
-    _ -> lists:keyreplace(Key, 2, Bucket, #hash_map_entry{key = Key, value = Value})
-  end.
-
-bucket_modify(Bucket, Key) ->
-  lists:keydelete(Key, 2, Bucket).
-
-bucket_get(Bucket, Key) ->
-  case lists:keyfind(Key, 2, Bucket) of
-    false -> {notfound, false};
-    Result -> {ok, element(3, Result)}
-  end.
-
-bucket_find(Bucket, Key) ->
-  case lists:keyfind(Key, 2, Bucket) of
-    false -> false;
-    _ -> true
-  end.
 
 from_key_value_list_with_hash(List, HashFunction) ->
   lists:foldl(
@@ -176,7 +147,7 @@ compare(#hash_map{size = Size1} = HashMap1, #hash_map{size = Size2} = HashMap2) 
     true ->
       KeyList1 = get_key_list(HashMap1),
       lists:all(
-        fun (Item) ->
+        fun(Item) ->
           get(Item, HashMap2) == get(Item, HashMap1)
         end,
         KeyList1);
@@ -186,7 +157,7 @@ compare(#hash_map{size = Size1} = HashMap1, #hash_map{size = Size2} = HashMap2) 
 filter(Pred, #hash_map{} = HashMap1) ->
   KeyValueList = get_key_value_list(HashMap1),
   lists:foldl(
-    fun (KeyValuePair, FilteredHashMap) ->
+    fun(KeyValuePair, FilteredHashMap) ->
       case Pred(element(2, KeyValuePair)) of
         true -> FilteredHashMap;
         false ->
@@ -197,27 +168,9 @@ filter(Pred, #hash_map{} = HashMap1) ->
     KeyValueList
   ).
 
-bucket_foldl(Func, Acc, Bucket) ->
-  lists:foldl(
-    fun (Item, FoldAcc) ->
-      Func(element(3, Item), FoldAcc)
-    end,
-    Acc,
-    Bucket
-  ).
-
-bucket_foldr(Func, Acc, Bucket) ->
-  lists:foldr(
-    fun (Item, FoldAcc) ->
-      Func(element(3, Item), FoldAcc)
-    end,
-    Acc,
-    Bucket
-  ).
-
 foldl(Func, Acc, #hash_map{buckets = Buckets}) ->
   lists:foldl(
-    fun (Bucket, FoldAcc) ->
+    fun(Bucket, FoldAcc) ->
       bucket_foldl(Func, FoldAcc, Bucket)
     end,
     Acc,
@@ -226,9 +179,80 @@ foldl(Func, Acc, #hash_map{buckets = Buckets}) ->
 
 foldr(Func, Acc, #hash_map{buckets = Buckets}) ->
   lists:foldr(
-    fun (Bucket, FoldAcc) ->
+    fun(Bucket, FoldAcc) ->
       bucket_foldr(Func, FoldAcc, Bucket)
     end,
     Acc,
     Buckets
+  ).
+
+concat(#hash_map{size = Size1} = HashMap1, #hash_map{size = Size2} = HashMap2) ->
+  case Size1 > Size2 of
+    true -> concat_to(HashMap1, HashMap2);
+    _ -> concat_to(HashMap2, HashMap1)
+  end.
+
+concat_to(#hash_map{} = HashMapDest, #hash_map{} = HashMapSrc) ->
+  KeyValueList = hash_map:get_key_value_list(HashMapSrc),
+  lists:foldl(
+    fun (KeyValuePair, HashMap) ->
+      hash_map:append(element(1, KeyValuePair), element(2, KeyValuePair), HashMap)
+    end,
+    HashMapDest,
+    KeyValueList).
+
+expand_hash_map(#hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction} = HashMap) ->
+  ExpandedBuckets = lists:foldl(fun(_, Acc) -> Acc ++ [Acc1 || Acc1 <- [[], []]] end, [], Buckets),
+  lists:foldl(
+    fun(Item, HashMap1) ->
+      append(element(1, Item), element(2, Item), HashMap1)
+    end,
+    new(ExpandedBuckets, BucketsAmount * 2, HashFunction),
+    get_key_value_list(HashMap)
+  ).
+
+should_expand(Bucket, BucketsAmount) ->
+  BucketPairsAmount = length(Bucket),
+  case BucketPairsAmount of Amount
+    when Amount / BucketsAmount >= 0.75 -> true;
+    _ -> false
+  end.
+
+bucket_modify(Bucket, Key, Value) ->
+  case lists:keyfind(Key, 2, Bucket) of
+    false -> lists:append(Bucket, [#hash_map_entry{key = Key, value = Value}]);
+    _ -> lists:keyreplace(Key, 2, Bucket, #hash_map_entry{key = Key, value = Value})
+  end.
+
+bucket_modify(Bucket, Key) ->
+  lists:keydelete(Key, 2, Bucket).
+
+bucket_get(Bucket, Key) ->
+  case lists:keyfind(Key, 2, Bucket) of
+    false -> {notfound, false};
+    Result -> {ok, element(3, Result)}
+  end.
+
+bucket_find(Bucket, Key) ->
+  case lists:keyfind(Key, 2, Bucket) of
+    false -> false;
+    _ -> true
+  end.
+
+bucket_foldl(Func, Acc, Bucket) ->
+  lists:foldl(
+    fun(Item, FoldAcc) ->
+      Func(element(3, Item), FoldAcc)
+    end,
+    Acc,
+    Bucket
+  ).
+
+bucket_foldr(Func, Acc, Bucket) ->
+  lists:foldr(
+    fun(Item, FoldAcc) ->
+      Func(element(3, Item), FoldAcc)
+    end,
+    Acc,
+    Bucket
   ).
