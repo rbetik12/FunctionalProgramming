@@ -8,7 +8,8 @@
 -record(state, {output_gen_pid, delta}).
 
 start_link(Delta, OutputGeneratorPid) ->
-  gen_server:start_link({local, ?MODULE}, ?MODULE, [Delta, OutputGeneratorPid], []).
+  {_, Pid} = gen_server:start_link({local, ?MODULE}, ?MODULE, [Delta, OutputGeneratorPid], []),
+  Pid.
 
 init([Delta, OutputGeneratorPid]) -> {ok, #state{output_gen_pid = OutputGeneratorPid, delta = Delta}}.
 

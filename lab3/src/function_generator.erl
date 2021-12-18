@@ -6,7 +6,8 @@
 -record(generator_state, {generator_type, points_gen_pid, points_list = [], func_map = maps:new()}).
 
 start_link(GeneratorType, PointsGenPid) ->
-  gen_server:start_link({local, ?MODULE}, ?MODULE, [GeneratorType, PointsGenPid], []).
+  {_, Pid} = gen_server:start_link({local, ?MODULE}, ?MODULE, [GeneratorType, PointsGenPid], []),
+  Pid.
 
 init([GeneratorType, PointsGenPid]) ->
   {ok, #generator_state{generator_type = GeneratorType, points_gen_pid = PointsGenPid}}.

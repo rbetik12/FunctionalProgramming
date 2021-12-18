@@ -23,9 +23,9 @@ input_stream(FuncGenPid) ->
   end.
 
 start(Mode, Delta) ->
-  { _, OutputGenPid } = output_generator:start_link(stdout),
-  { _, PointsGenPid } = points_generator:start_link(Delta, OutputGenPid),
-  { _, FuncGenPid } = function_generator:start_link(Mode, PointsGenPid),
+  OutputGenPid = output_generator:start_link(stdout),
+  PointsGenPid = points_generator:start_link(Delta, OutputGenPid),
+  FuncGenPid = function_generator:start_link(Mode, PointsGenPid),
   input_stream(FuncGenPid).
 
 stop(_State) -> ok.
