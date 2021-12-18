@@ -39,7 +39,7 @@ from_key_value_list(List) ->
     List
   ).
 
-append_list(List, #hash_map{buckets = _, buckets_amount = _, hash_function = _} = HashMap) ->
+append_list(List, #hash_map{} = HashMap) ->
   lists:foldl(
     fun(Item, HashMap) ->
       append(element(1, Item), element(2, Item), HashMap)
@@ -52,7 +52,7 @@ get(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_funct
   Slot = HashFunction(Key, BucketsAmount) + 1,
   bucket_get(lists:nth(Slot, Buckets), Key).
 
-append(Key, Value, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction} = HashMap) ->
+append(Key, Value, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = HashFunction}) ->
   Slot = HashFunction(Key, BucketsAmount) + 1,
 
   Buckets1 = lists:sublist(Buckets, Slot - 1) ++
@@ -64,7 +64,7 @@ append(Key, Value, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, 
     buckets_amount = BucketsAmount,
     hash_function = HashFunction},
 
-  ShouldExpand = should_expand(HashMap1),
+  ShouldExpand = should_expand(lists:nth(Slot, Buckets), BucketsAmount),
   case ShouldExpand of
     true -> expand_hash_map(HashMap1);
     false -> HashMap1
@@ -83,7 +83,7 @@ remove(Key, #hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_fu
       lists:sublist(Buckets, Slot + 1, BucketsAmount - Slot + 1),
     buckets_amount = BucketsAmount, hash_function = HashFunction}.
 
-without(ListOfKeys, #hash_map{buckets = _} = HashMap) ->
+without(ListOfKeys, #hash_map{} = HashMap) ->
   lists:foldl(
     fun(Key, HashMap) ->
       remove(Key, HashMap)
@@ -102,25 +102,10 @@ expand_hash_map(#hash_map{buckets = Buckets, buckets_amount = BucketsAmount, has
     get_key_value_list(HashMap)
   ).
 
-should_expand(#hash_map{buckets = Buckets, buckets_amount = BucketsAmount, hash_function = _}) ->
-  FilledBucketsAmount = lists:foldl(
-    fun(Bucket, Acc) ->
-      case bucket_empty(Bucket) of
-        false -> Acc + 1;
-        true -> Acc
-      end
-    end,
-    0,
-    Buckets
-  ),
-  case FilledBucketsAmount / BucketsAmount of Result
-    when Result >= 0.75 -> true;
-    _ -> false
-  end.
-
-bucket_empty(Bucket) ->
-  case length(Bucket) of
-    0 -> true;
+should_expand(Bucket, BucketsAmount) ->
+  BucketPairsAmount = length(Bucket),
+  case BucketPairsAmount of Amount
+  when Amount / BucketsAmount >= 0.75 -> true;
     _ -> false
   end.
 
@@ -154,7 +139,7 @@ from_key_value_list_with_hash(List, HashFunction) ->
     List
   ).
 
-get_key_value_list(#hash_map{buckets = Buckets, buckets_amount = _, hash_function = _}) ->
+get_key_value_list(#hash_map{buckets = Buckets}) ->
   lists:foldl(
     fun(Bucket, List) ->
       KeyValueList = lists:map(fun(Item) -> {element(2, Item), element(3, Item)} end, Bucket),
@@ -164,6 +149,6 @@ get_key_value_list(#hash_map{buckets = Buckets, buckets_amount = _, hash_functio
     Buckets
   ).
 
-get_value_list(#hash_map{buckets = _, buckets_amount = _, hash_function = _} = HashMap) ->
+get_value_list(#hash_map{} = HashMap) ->
   KeyValueList = get_key_value_list(HashMap),
   lists:map(fun(KeyValueTuple) -> element(2, KeyValueTuple) end, KeyValueList).

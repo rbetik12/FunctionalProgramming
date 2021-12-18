@@ -3,6 +3,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+custom_hash_function(_, _) -> 1.
+
 append_test() ->
   HashMap = hash_map:new(),
   AppendedHashMap = hash_map:append(1, 2, HashMap),
@@ -26,8 +28,6 @@ change_element_test() ->
   HashMap = hash_map:from_key_value_list([{kek, 2}]),
   ModifiedHashMap = hash_map:append(kek, 5, HashMap),
   ?assert(hash_map:get(kek, ModifiedHashMap) == {ok, 5}).
-
-custom_hash_function(_, _) -> 1.
 
 append_with_collision_test() ->
   HashMap = hash_map:from_key_value_list_with_hash([{kek, 2}, {lol, 5}], fun custom_hash_function/2),
@@ -61,7 +61,7 @@ get_value_list_test() ->
 
 expand_test() ->
   HashMap = hash_map:from_key_value_list([{2, 3}, {false, 4}, {true, 5}]),
-  HashMap1 = hash_map:append_list([{key1, 3}, {key2, 3}, {key3, 10}], HashMap),
+  HashMap1 = hash_map:append_list([{key1, 3}, {key2, 3}, {key3, 10}, {key4, 10}, {key5, 10}], HashMap),
   ?assert(hash_map:get(2, HashMap1) == {ok, 3}),
   ?assert(hash_map:get(false, HashMap1) == {ok, 4}),
   ?assert(hash_map:get(key3, HashMap1) == {ok, 10}).
