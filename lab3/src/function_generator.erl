@@ -3,11 +3,17 @@
 -export([start_link/2]).
 -export([init/1, handle_cast/2, send_message/2, handle_call/3]).
 
--record(state, {generator_type, points_gen_pid, points_list = [], func_map = maps:new()}).
+-record(state, {generator_type, points_gen_pid = 0, points_list = [], func_map = maps:new()}).
+
+start_link(GeneratorType, no_message_passing) ->
+  {_, Pid} = gen_server:start_link({local, ?MODULE}, ?MODULE, [GeneratorType, no_message_passing], []),
+  Pid;
 
 start_link(GeneratorType, PointsGenPid) ->
   {_, Pid} = gen_server:start_link({local, ?MODULE}, ?MODULE, [GeneratorType, PointsGenPid], []),
   Pid.
+
+init([GeneratorType, no_message_passing]) -> {ok, #state{generator_type = GeneratorType}};
 
 init([GeneratorType, PointsGenPid]) -> {ok, #state{generator_type = GeneratorType, points_gen_pid = PointsGenPid}}.
 
@@ -52,7 +58,7 @@ generate_function(linear, PointsList, FuncMap, Pid) ->
   A1 = (Y2 - Y1) / (X2 - X1),
   A0 = Y1 - A1 * X1,
   Func = fun(X) -> A0 + A1 * X end,
-  points_generator:send_message(Pid, {{X1, X2}, Func}),
+  pass_message(Pid, {{X1, X2}, Func}),
   maps:put({X1, X2}, Func, FuncMap);
 
 generate_function(quadratic, PointsList, FuncMap, Pid) ->
@@ -63,5 +69,9 @@ generate_function(quadratic, PointsList, FuncMap, Pid) ->
   A1 = ((Y2 - Y1) / (X2 - X1)) - (A2 * (X2 + X1)),
   A0 = Y1 - A1 * X1 - A2 * X1 * X1,
   Func = fun(X) -> A0 + A1 * X + A2 * X * X end,
-  points_generator:send_message(Pid, {{X1, X3}, Func}),
+  pass_message(Pid, {{X1, X3}, Func}),
   maps:put({X1, X2}, Func, FuncMap).
+
+pass_message(0, _) -> ok;
+
+pass_message(Pid, Data) -> points_generator:send_message(Pid, Data).
