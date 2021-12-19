@@ -13,10 +13,8 @@ start_link(Mode) ->
 
 init([Mode]) -> {ok, #state{mode = Mode}}.
 
-output_x_y(stdout, X, Y) -> io:format("~f;~f~n", [X, Y]).
-
 handle_cast({X, Y}, #state{mode = Mode}) ->
-  output_x_y(Mode, X, Y),
+  io:format("~f;~f~n", [X, Y]),
   {noreply, #state{mode = Mode}}.
 
 handle_call(_, _, _) -> throw("Call is not supported in output generator!").

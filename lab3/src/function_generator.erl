@@ -23,10 +23,6 @@ handle_cast({add_point, X, Y}, #state{generator_type = quadratic} = State) -> ha
 
 handle_call({get_func_map}, _, #state{func_map = FuncMap} = State) -> {reply, FuncMap, State}.
 
-send_message(Pid, {get_func_map}) -> gen_server:call(Pid, {get_func_map});
-
-send_message(Pid, Data) -> gen_server:cast(Pid, Data).
-
 handle_point(X, Y, MaxPoints, #state{
   generator_type = Type,
   points_gen_pid = Pid,
@@ -75,3 +71,7 @@ generate_function(quadratic, PointsList, FuncMap, Pid) ->
 pass_message(0, _) -> ok;
 
 pass_message(Pid, Data) -> points_generator:send_message(Pid, Data).
+
+send_message(Pid, {get_func_map}) -> gen_server:call(Pid, {get_func_map});
+
+send_message(Pid, Data) -> gen_server:cast(Pid, Data).
