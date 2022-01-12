@@ -70,8 +70,8 @@ generate_function(quadratic, PointsList, FuncMap, Pid) ->
 
 pass_message(0, _) -> ok;
 
-pass_message(Pid, Data) -> points_generator:send_message(Pid, Data).
+pass_message(Pid, Message) -> points_generator:send_message(Pid, Message).
 
 send_message(Pid, {get_func_map}) -> gen_server:call(Pid, {get_func_map});
 
-send_message(Pid, Data) -> gen_server:cast(Pid, Data).
+send_message(Pid, Message) -> gen_server:cast(Pid, Message).
