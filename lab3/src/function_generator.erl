@@ -23,7 +23,7 @@ handle_cast({add_point, X, Y}, #state{generator_type = linear} = State) -> handl
 
 handle_cast({add_point, X, Y}, #state{generator_type = quadratic} = State) -> handle_point(X, Y, 3, State).
 
-handle_call(_, _, _) -> throw("This module doesn't support gen_server calls").
+handle_call(_, _, _) -> throw("function generator doesn't support gen_server calls").
 
 handle_point(X, Y, MaxPoints, #state{
   generator_type = Type,

@@ -23,7 +23,7 @@ input_stream(FuncGenPid) ->
   end.
 
 start(Mode, Delta) ->
-  OutputGenPid = output_generator:start_link(stdout),
+  OutputGenPid = math_logger:start_link(),
   PointsGenPid = points_generator:start_link(Delta, OutputGenPid),
   FuncGenPid = function_generator:start_link(Mode, PointsGenPid),
   input_stream(FuncGenPid).

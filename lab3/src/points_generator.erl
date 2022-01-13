@@ -27,7 +27,7 @@ handle_call({{X1, X2}, Func}, _, #state{output_gen_pid = Pid, delta = Delta}) ->
     fun(_, {Acc, PointsList}) ->
       X = Acc,
       Y = Func(Acc),
-      pass_message(Pid, {X, Y}),
+      math_logger:log_point(Pid, X, Y),
       {Acc + Delta, PointsList ++ [{X, Y}]}
     end,
     {X1, []},
@@ -35,11 +35,7 @@ handle_call({{X1, X2}, Func}, _, #state{output_gen_pid = Pid, delta = Delta}) ->
   ),
   {reply, InterpolatedPoints, #state{output_gen_pid = Pid, delta = Delta}}.
 
-handle_cast(_, _) -> throw("This module doesn't support gen_server casts").
-
-pass_message(0, _) -> ok;
-
-pass_message(Pid, Message) -> output_generator:send_message(Pid, Message).
+handle_cast(_, _) -> throw("points_generator doesn't support gen_server casts").
 
 transport_message(Pid, Message) -> gen_server:call(Pid, Message).
 
