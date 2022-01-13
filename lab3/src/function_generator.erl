@@ -1,23 +1,20 @@
 -module(function_generator).
 -behaviour(gen_server).
--export([start_link/2, add_point/3]).
+-export([start_link/1, add_point/3]).
 -export([init/1, handle_cast/2, handle_call/3]).
 
--record(state, {generator_type, points_gen_pid = 0, points_list = [], func_map = maps:new()}).
+-define(SERVER, ?MODULE).
 
-start_link(GeneratorType, no_message_passing) ->
-  {_, Pid} = gen_server:start_link({local, ?MODULE}, ?MODULE, [GeneratorType, no_message_passing], []),
-  Pid;
+-record(state, {generator_type, points_list = [], func_map = maps:new()}).
 
-start_link(GeneratorType, PointsGenPid) ->
-  {_, Pid} = gen_server:start_link({local, ?MODULE}, ?MODULE, [GeneratorType, PointsGenPid], []),
-  Pid.
+start_link(GeneratorType) ->
+  {ok, _} = gen_server:start_link({local, ?SERVER}, ?MODULE, [GeneratorType], []).
 
 add_point(Pid, X, Y) -> transport_message(Pid, {add_point, X, Y}).
 
-init([GeneratorType, no_message_passing]) -> {ok, #state{generator_type = GeneratorType}};
-
-init([GeneratorType, PointsGenPid]) -> {ok, #state{generator_type = GeneratorType, points_gen_pid = PointsGenPid}}.
+init([GeneratorType]) ->
+  io:fwrite("function_generator has started!~n"),
+  {ok, #state{generator_type = GeneratorType}}.
 
 handle_cast({add_point, X, Y}, #state{generator_type = linear} = State) -> handle_point(X, Y, 2, State);
 
@@ -27,7 +24,6 @@ handle_call(_, _, _) -> throw("function generator doesn't support gen_server cal
 
 handle_point(X, Y, MaxPoints, #state{
   generator_type = Type,
-  points_gen_pid = Pid,
   points_list = PointList,
   func_map = FuncMap}) ->
   PointList1 = lists:append(PointList, [{X, Y}]),
@@ -37,29 +33,27 @@ handle_point(X, Y, MaxPoints, #state{
       #state{
         generator_type = Type,
         points_list = [lists:nth(MaxPoints, PointList1)],
-        func_map = generate_function(Type, PointList1, FuncMap, Pid),
-        points_gen_pid = Pid}
+        func_map = generate_function(Type, PointList1, FuncMap)}
     };
     _ -> {
       noreply,
       #state{
         generator_type = Type,
         points_list = PointList1,
-        func_map = FuncMap,
-        points_gen_pid = Pid}
+        func_map = FuncMap}
     }
   end.
 
-generate_function(linear, PointsList, FuncMap, Pid) ->
+generate_function(linear, PointsList, FuncMap) ->
   {X1, Y1} = lists:nth(1, PointsList),
   {X2, Y2} = lists:nth(2, PointsList),
   A1 = (Y2 - Y1) / (X2 - X1),
   A0 = Y1 - A1 * X1,
   Func = fun(X) -> A0 + A1 * X end,
-  points_generator:send_new_function(Pid, X1, X2, Func),
+  points_generator:send_new_function(points_generator, X1, X2, Func),
   maps:put({X1, X2}, Func, FuncMap);
 
-generate_function(quadratic, PointsList, FuncMap, Pid) ->
+generate_function(quadratic, PointsList, FuncMap) ->
   {X1, Y1} = lists:nth(1, PointsList),
   {X2, Y2} = lists:nth(2, PointsList),
   {X3, Y3} = lists:nth(3, PointsList),
@@ -67,7 +61,7 @@ generate_function(quadratic, PointsList, FuncMap, Pid) ->
   A1 = ((Y2 - Y1) / (X2 - X1)) - (A2 * (X2 + X1)),
   A0 = Y1 - A1 * X1 - A2 * X1 * X1,
   Func = fun(X) -> A0 + A1 * X + A2 * X * X end,
-  points_generator:send_new_function(Pid, X1, X3, Func),
+  points_generator:send_new_function(points_generator, X1, X3, Func),
   maps:put({X1, X3}, Func, FuncMap).
 
 transport_message(Pid, Message) -> gen_server:cast(Pid, Message).
