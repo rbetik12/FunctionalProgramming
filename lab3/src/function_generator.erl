@@ -1,7 +1,7 @@
 -module(function_generator).
 -behaviour(gen_server).
--export([start_link/2]).
--export([init/1, handle_cast/2, send_message/2, handle_call/3]).
+-export([start_link/2, add_point/3]).
+-export([init/1, handle_cast/2, handle_call/3]).
 
 -record(state, {generator_type, points_gen_pid = 0, points_list = [], func_map = maps:new()}).
 
@@ -13,6 +13,8 @@ start_link(GeneratorType, PointsGenPid) ->
   {_, Pid} = gen_server:start_link({local, ?MODULE}, ?MODULE, [GeneratorType, PointsGenPid], []),
   Pid.
 
+add_point(Pid, X, Y) -> transport_message(Pid, {add_point, X, Y}, cast).
+
 init([GeneratorType, no_message_passing]) -> {ok, #state{generator_type = GeneratorType}};
 
 init([GeneratorType, PointsGenPid]) -> {ok, #state{generator_type = GeneratorType, points_gen_pid = PointsGenPid}}.
@@ -21,7 +23,7 @@ handle_cast({add_point, X, Y}, #state{generator_type = linear} = State) -> handl
 
 handle_cast({add_point, X, Y}, #state{generator_type = quadratic} = State) -> handle_point(X, Y, 3, State).
 
-handle_call({get_func_map}, _, #state{func_map = FuncMap} = State) -> {reply, FuncMap, State}.
+handle_call(_, _, _) -> throw("This module doesn't support gen_server calls").
 
 handle_point(X, Y, MaxPoints, #state{
   generator_type = Type,
@@ -68,10 +70,8 @@ generate_function(quadratic, PointsList, FuncMap, Pid) ->
   pass_message(Pid, {{X1, X3}, Func}),
   maps:put({X1, X2}, Func, FuncMap).
 
+transport_message(Pid, Message, cast) -> gen_server:cast(Pid, Message).
+
 pass_message(0, _) -> ok;
 
 pass_message(Pid, Message) -> points_generator:send_message(Pid, Message).
-
-send_message(Pid, {get_func_map}) -> gen_server:call(Pid, {get_func_map});
-
-send_message(Pid, Message) -> gen_server:cast(Pid, Message).

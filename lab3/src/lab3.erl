@@ -18,7 +18,7 @@ input_stream(FuncGenPid) ->
   case get_x_y() of
     eof -> eof;
     {X, Y} ->
-      function_generator:send_message(FuncGenPid, {add_point, X, Y}),
+      function_generator:add_point(FuncGenPid, X, Y),
       input_stream(FuncGenPid)
   end.
 
